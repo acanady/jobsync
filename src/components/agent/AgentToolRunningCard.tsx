@@ -18,7 +18,11 @@ export function AgentToolRunningCard({ part }: { part: ToolUIPart }) {
             ? "Matching your resume to this job…"
             : toolName === "generate_cover_letter"
               ? "Writing your cover letter…"
-              : "Working…";
+              : toolName === "tailor_resume"
+                ? "Tailoring your resume to this job…"
+                : toolName === "update_resume"
+                  ? "Preparing your resume changes…"
+                  : "Working…";
 
   return <AgentStatusRow label={label} />;
 }

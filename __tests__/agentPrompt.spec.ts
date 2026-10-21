@@ -126,13 +126,15 @@ describe("agent chat system prompt", () => {
     expect(AGENT_CHAT_PROMPT_SECTIONS.capabilities).toMatch(/never ask them to open a job/i);
   });
 
-  it("describes all five tools", () => {
+  it("describes all seven tools", () => {
     expect(Object.keys(AGENT_TOOL_DESCRIPTIONS)).toEqual([
       "add_job",
       "get_resume",
       "review_resume",
       "match_job",
       "generate_cover_letter",
+      "tailor_resume",
+      "update_resume",
     ]);
   });
 

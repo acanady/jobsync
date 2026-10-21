@@ -21,6 +21,8 @@ export const SURFACE_BY_NESTED_LABEL: Record<string, Surface> = {
   review_resume: SURFACES.RESUME_REVIEW,
   match_job: SURFACES.JOB_MATCH,
   generate_cover_letter: SURFACES.COVER_LETTER,
+  // Tailoring is a resume-quality surface; SURFACES is closed at six.
+  tailor_resume: SURFACES.RESUME_REVIEW,
 };
 
 export function genAiRequestAttrs(input: {

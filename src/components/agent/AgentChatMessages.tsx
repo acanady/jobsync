@@ -149,7 +149,9 @@ export function AgentChatMessages() {
                   }
                   // A letter has no scores line, so stripping reasoning is the
                   // whole of its parse.
-                  if (tool === "generate_cover_letter") {
+                  // The tailored resume streams as markdown sections; the
+                  // proposal card replaces it once the app has parsed them.
+                  if (tool === "generate_cover_letter" || tool === "tailor_resume") {
                     return <AgentMarkdown key={i} text={stripThinking(streamed)} />;
                   }
                   const parsed = parseResumeReview(streamed);

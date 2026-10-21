@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { McpAddJobInputShape } from "@/models/mcp.schema";
+import { ResumeEditsSchema } from "@/models/resumeEdits";
 
 export const AgentChatRequestSchema = z.object({
   // Validated by the SDK downstream, not here. The whole array is
@@ -78,3 +79,23 @@ export const AgentCoverLetterSchema = z.object({
 });
 
 export type AgentCoverLetterInput = z.infer<typeof AgentCoverLetterSchema>;
+
+// No job field: the resume is tailored to the job the user is viewing, from
+// server-held page context. requests carries what the user asked for in their
+// own words, so the tailoring generation can honour it.
+export const AgentTailorResumeSchema = z.object({
+  resumeTitle: z.string().optional().describe("The title of the resume to tailor, as the user referred to it. Omit this entirely if the user did not name one — the app then uses the resume linked to the job, or their default resume."),
+  requests: z.string().max(2000).optional().describe("Any specific changes or emphasis the user asked for, in their own words (e.g. 'focus on networking, drop the MATLAB bullets'). Omit if they only asked to tailor the resume."),
+});
+
+export type AgentTailorResumeInput = z.infer<typeof AgentTailorResumeSchema>;
+
+// The edits are the model's, written from what the user dictated; the server
+// fits them to the resume and the user approves them on a card before
+// anything is written. Never an id, for the same reason as the tools above.
+export const AgentUpdateResumeSchema = z.object({
+  resumeTitle: z.string().optional().describe("The title of the resume to change, as the user referred to it. Omit this entirely if the user did not name one — the app then uses the resume they are currently viewing, or their default resume."),
+  edits: ResumeEditsSchema.describe("Only the parts the user asked to change. Experience entries are named by company and job title exactly as they appear on the resume; call get_resume first if you have not read it this conversation."),
+});
+
+export type AgentUpdateResumeInput = z.infer<typeof AgentUpdateResumeSchema>;
