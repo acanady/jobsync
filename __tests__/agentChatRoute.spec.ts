@@ -288,6 +288,8 @@ describe("POST /api/ai/chat", () => {
       "review_resume",
       "match_job",
       "generate_cover_letter",
+      "tailor_resume",
+      "update_resume",
     ]);
   });
 

@@ -6,6 +6,7 @@ export const AI_USAGE_FEATURES = {
   automations: "Automations",
   resume_review: "Resume review",
   cover_letter: "Cover letter",
+  resume_tailor: "Resume tailoring",
   resume_import: "Resume import",
 } as const;
 
@@ -15,6 +16,7 @@ export const FEATURE_BY_NESTED_LABEL: Record<string, AiUsageFeature> = {
   review_resume: "resume_review",
   match_job: "job_match",
   generate_cover_letter: "cover_letter",
+  tailor_resume: "resume_tailor",
 };
 
 export const AI_CALL_STATUSES = [

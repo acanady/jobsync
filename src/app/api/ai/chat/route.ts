@@ -46,13 +46,21 @@ import {
   startSpan,
   SURFACES,
 } from "@/lib/telemetry";
-import { addJobSettled, AGENT_CHAT_TERMINAL_TOOLS } from "@/models/agent.model";
+import {
+  addJobSettled,
+  AGENT_CHAT_TERMINAL_TOOLS,
+  updateResumeSettled,
+} from "@/models/agent.model";
 import { startAiCall, usageOfSteps, type TokenUsage } from "@/lib/aiUsage/tracker";
 
 // The one terminal tool whose stop condition is not "was it called" — see
 // addJobSettled.
 const addJobSettledStop: StopCondition<any> = ({ steps }) =>
   addJobSettled(steps[steps.length - 1] ?? {});
+
+// update_resume likewise ends the turn only once it has produced its card.
+const updateResumeSettledStop: StopCondition<any> = ({ steps }) =>
+  updateResumeSettled(steps[steps.length - 1] ?? {});
 
 // One structured line per turn. Sizes and outcomes only — never the pasted
 // posting and never the extracted arguments.
@@ -286,7 +294,11 @@ export const POST = async (req: NextRequest) => {
           stopWhen: [
             stepCountIs(APP_CONSTANTS.AGENT_CHAT_MAX_STEPS),
             ...AGENT_CHAT_TERMINAL_TOOLS.map((name) =>
-              name === "add_job" ? addJobSettledStop : hasToolCall(name),
+              name === "add_job"
+                ? addJobSettledStop
+                : name === "update_resume"
+                  ? updateResumeSettledStop
+                  : hasToolCall(name),
             ),
           ],
           // Argument extraction wants determinism.

@@ -28,6 +28,8 @@ export {
 
 export { addResumeSummary, updateResumeSummary } from "./profile/summary";
 
+export { applyResumeEdits } from "./profile/resumeEdits";
+
 export { addExperience, updateExperience } from "./profile/experience";
 
 export { addEducation, updateEducation } from "./profile/education";

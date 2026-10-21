@@ -117,8 +117,11 @@ describe("nested tool registry", () => {
       "review_resume",
       "match_job",
       "generate_cover_letter",
+      "tailor_resume",
     ]);
     expect(isNestedTool("generate_cover_letter")).toBe(true);
+    expect(isNestedTool("tailor_resume")).toBe(true);
+    expect(isNestedTool("update_resume")).toBe(false);
     expect(isNestedTool("add_job")).toBe(false);
   });
 

@@ -1,5 +1,6 @@
 import type { DescriptionCompleteness } from "@/models/job.model";
 import type { JobMatchScores, ResumeScores } from "@/models/ai.schemas";
+import type { ResumeEditProposal } from "@/models/resumeEdits";
 
 // Dependency-free by design: client components import these types, so nothing
 // here may pull in Prisma or server-only code. Type-only imports are erased.
@@ -155,6 +156,27 @@ export type AgentCoverLetterResult =
   | { status: "unreadable"; what: "job" | "resume"; title: string; reason: string }
   | { status: "generation_failed"; jobTitle: string; reason: string };
 
+// What tailor_resume returns to the model AND to the result card. Nothing is
+// written by the tool: the card's buttons apply proposal.edits through
+// applyResumeEdits, so the model never re-copies them.
+export type AgentTailorResumeResult =
+  | { status: "ok"; proposal: ResumeEditProposal }
+  | { status: "no_changes"; resumeTitle: string; warnings: string[] }
+  | { status: "no_job" }
+  | { status: "no_description"; jobTitle: string }
+  | { status: "needs_selection"; resumes: { id: string; title: string }[] }
+  | { status: "no_resumes" }
+  | { status: "unreadable"; what: "job" | "resume"; title: string; reason: string }
+  | { status: "generation_failed"; jobTitle: string; reason: string };
+
+// What update_resume returns: the same proposal card, for edits the user
+// dictated. The model wrote the edits; the app fitted them to the resume.
+export type AgentUpdateResumeResult =
+  | { status: "ok"; proposal: ResumeEditProposal }
+  | { status: "no_changes"; resumeTitle: string; warnings: string[] }
+  | { status: "needs_selection"; resumes: { id: string; title: string }[] }
+  | { status: "no_resumes" };
+
 // Tools that run their own generation and stream it as transient parts. The
 // transcript and the provider both branch on this rather than on a chain of
 // name comparisons that grows with every nested tool.
@@ -162,6 +184,7 @@ export const AGENT_NESTED_TOOLS = [
   "review_resume",
   "match_job",
   "generate_cover_letter",
+  "tailor_resume",
 ] as const;
 
 export function isNestedTool(name: string): boolean {
@@ -175,8 +198,21 @@ export function isNestedTool(name: string): boolean {
 // and blow the turn timeout, discarding both.
 export const AGENT_CHAT_TERMINAL_TOOLS = [
   "add_job",
+  "update_resume",
   ...AGENT_NESTED_TOOLS,
 ] as const;
+
+// update_resume ends the turn once it has produced a card. A call whose input
+// failed the schema produced none, and the model needs that same step's
+// successor to retry — the add_job lesson below, without the approval wrinkle.
+export function updateResumeSettled(step: {
+  toolCalls?: readonly { toolName: string; invalid?: boolean }[];
+  toolResults?: readonly { toolName: string }[];
+}): boolean {
+  const call = step.toolCalls?.find((c) => c.toolName === "update_resume");
+  if (!call || call.invalid) return false;
+  return Boolean(step.toolResults?.some((r) => r.toolName === "update_resume"));
+}
 
 // add_job is terminal once it has SETTLED — written, hit a duplicate, or
 // asked for approval — not merely once it has been called. A call that cannot

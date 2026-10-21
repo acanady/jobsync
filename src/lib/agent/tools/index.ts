@@ -6,6 +6,8 @@ import { buildGetResumeTool } from "./getResume";
 import { buildReviewResumeTool } from "./reviewResume";
 import { buildMatchJobTool } from "./matchJob";
 import { buildGenerateCoverLetterTool } from "./generateCoverLetter";
+import { buildTailorResumeTool } from "./tailorResume";
+import { buildUpdateResumeTool } from "./updateResume";
 
 // The three nested tools deliberately break the "a tool touches neither the
 // route nor provider resolution" rule in CLAUDE.md: they run their own
@@ -51,6 +53,16 @@ export function buildAgentTools(ctx: {
       writer: ctx.writer,
       guard: ctx.nestedGuard,
     }),
+    tailor_resume: buildTailorResumeTool({
+      userId: ctx.userId,
+      pageJobId: ctx.pageContext?.jobId,
+      model: ctx.model,
+      provider: ctx.provider,
+      modelName: ctx.modelName,
+      writer: ctx.writer,
+      guard: ctx.nestedGuard,
+    }),
+    update_resume: buildUpdateResumeTool(ctx.userId, ctx.pageContext?.resumeId),
   };
 }
 
@@ -60,4 +72,6 @@ export {
   buildReviewResumeTool,
   buildMatchJobTool,
   buildGenerateCoverLetterTool,
+  buildTailorResumeTool,
+  buildUpdateResumeTool,
 };
