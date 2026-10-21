@@ -61,6 +61,12 @@ export function StepReview({
         </span>
       </div>
       <div className="flex justify-between gap-4">
+        <span className="text-muted-foreground">Remote (US) only</span>
+        <span className="font-medium text-right">
+          {atsConfig.remoteUsOnly ? "Yes" : "No"}
+        </span>
+      </div>
+      <div className="flex justify-between gap-4">
         <span className="text-muted-foreground">Jobs analyzed per run</span>
         <span className="font-medium text-right">
           {atsConfig.topK ?? APP_CONSTANTS.MAX_JOBS_PER_RUN}

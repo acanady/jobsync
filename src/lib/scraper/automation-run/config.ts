@@ -8,6 +8,7 @@ export interface AtsRunConfig {
   excludeTitles: string[];
   locations: string[];
   strictLocation: boolean;
+  remoteUsOnly: boolean;
   topK: number;
   saveUnanalyzed: boolean;
 }
@@ -28,6 +29,7 @@ export function parseAtsConfig(
       excludeTitles: Array.isArray(cfg.excludeTitles) ? cfg.excludeTitles : [],
       locations: Array.isArray(cfg.locations) ? cfg.locations : [],
       strictLocation: !!cfg.strictLocation,
+      remoteUsOnly: !!cfg.remoteUsOnly,
       topK:
         typeof cfg.topK === "number" && cfg.topK > 0
           ? cfg.topK

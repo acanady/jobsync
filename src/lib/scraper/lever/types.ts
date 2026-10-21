@@ -5,6 +5,7 @@ export interface LeverPosting {
   applyUrl?: string;
   createdAt?: number; // epoch ms
   workplaceType?: string; // "remote" | "hybrid" | "on-site" — mapped to REMOTE/HYBRID/ONSITE
+  country?: string; // ISO 3166-1 alpha-2 of the primary location, e.g. "US"
   categories?: {
     commitment?: string; // employment type
     team?: string;

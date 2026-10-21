@@ -55,5 +55,6 @@ export function mapLeverJob(job: LeverPosting, companyName: string): JobDetails 
       : undefined,
     employmentType: job.categories?.commitment,
     workplaceType: mapLeverWorkplace(job.workplaceType),
+    country: job.country || undefined,
   };
 }

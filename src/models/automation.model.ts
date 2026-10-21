@@ -25,6 +25,7 @@ export interface GreenhouseSourceConfig {
   excludeTitles?: string[];
   locations?: string[];
   strictLocation?: boolean;
+  remoteUsOnly?: boolean;
   topK?: number;
   saveUnanalyzed?: boolean;
 }

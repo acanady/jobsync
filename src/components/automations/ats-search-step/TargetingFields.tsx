@@ -118,6 +118,23 @@ export function TargetingFields({ value, onChange }: TargetingFieldsProps) {
           }
         />
       </div>
+
+      <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+        <div className="space-y-1">
+          <Label>Remote (US) only</Label>
+          <p className="text-sm text-muted-foreground">
+            When on, only remote jobs open to US-based candidates are kept;
+            on-site, hybrid and remote roles limited to other countries are
+            dropped before ranking.
+          </p>
+        </div>
+        <Switch
+          checked={!!value.remoteUsOnly}
+          onCheckedChange={(checked) =>
+            onChange({ ...value, remoteUsOnly: checked })
+          }
+        />
+      </div>
     </>
   );
 }
