@@ -2,12 +2,14 @@ import { APP_CONSTANTS } from "@/lib/constants";
 import type { PrerankComponents } from "@/models/ai.schemas";
 import type { JobDetails } from "../types";
 import { scoreJob, passesFloor, locationMatches, buildIdf } from "./rank";
+import { isRemoteUsJob } from "./remoteUs";
 
 export interface PipelineConfig {
   targetTitles: string[];
   keywords: string[];
   locations: string[];
   strictLocation: boolean;
+  remoteUsOnly?: boolean;
 }
 
 export interface ScoredJob {
@@ -24,13 +26,14 @@ export interface PipelineResult {
   funnel: {
     deduped: number; // jobs handed in (already deduped by the runner)
     located: number | null; // survivors after strict location gate (null if off)
+    remoteUs: number | null; // survivors after the remote-US gate (null if off)
     floorSurvivors: number; // jobs clearing the floor, before the cap ceiling
     scoreCut: number; // floor survivors dropped by the minimum-score gate
     relevant: number; // survivors after the score gate and cap (the LLM budget)
   };
 }
 
-// Pure funnel: optional strict-location gate -> score -> relevance floor ->
+// Pure funnel: optional strict-location gate -> remote-US gate -> score -> relevance floor ->
 // cap ceiling -> top-K split. No I/O, no LLM; unit-testable in isolation.
 export function runAtsPipeline(
   fetchedJobs: JobDetails[],
@@ -54,7 +57,11 @@ export function runAtsPipeline(
       )
     : null;
 
-  const working = located ?? fetchedJobs;
+  const remoteUs = config.remoteUsOnly
+    ? (located ?? fetchedJobs).filter((job) => isRemoteUsJob(job))
+    : null;
+
+  const working = remoteUs ?? located ?? fetchedJobs;
 
   const scored: ScoredJob[] = working.map((job) => {
     const { score, components } = scoreJob(
@@ -90,6 +97,7 @@ export function runAtsPipeline(
     funnel: {
       deduped,
       located: located ? located.length : null,
+      remoteUs: remoteUs ? remoteUs.length : null,
       floorSurvivors: floorSurvivors.length,
       scoreCut: floorSurvivors.length - ranked.length,
       relevant: capped.length,

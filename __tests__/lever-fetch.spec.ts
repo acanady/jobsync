@@ -208,6 +208,11 @@ describe("mapLeverJob", () => {
     expect(mapped.employmentType).toBe("Full-time");
   });
 
+  it("carries Lever's country code for the remote-US gate", () => {
+    expect(mapLeverJob(posting("x", { country: "US" }), "Acme").country).toBe("US");
+    expect(mapLeverJob(posting("x", {}), "Acme").country).toBeUndefined();
+  });
+
   it("falls back to openingPlain when descriptionPlain is absent", () => {
     const mapped = mapLeverJob(
       posting("x", { openingPlain: "Intro only" }),

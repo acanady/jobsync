@@ -7,6 +7,7 @@ export interface AtsRunConfig {
   keywords: string[];
   locations: string[];
   strictLocation: boolean;
+  remoteUsOnly: boolean;
   topK: number;
   saveUnanalyzed: boolean;
 }
@@ -26,6 +27,7 @@ export function parseAtsConfig(
       keywords: Array.isArray(cfg.keywords) ? cfg.keywords : [],
       locations: Array.isArray(cfg.locations) ? cfg.locations : [],
       strictLocation: !!cfg.strictLocation,
+      remoteUsOnly: !!cfg.remoteUsOnly,
       topK:
         typeof cfg.topK === "number" && cfg.topK > 0
           ? cfg.topK

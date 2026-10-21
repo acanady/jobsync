@@ -111,6 +111,12 @@ export function AutomationSearchConfig({
             </p>
           </div>
           <div>
+            <p className="text-sm text-muted-foreground">Remote (US) only</p>
+            <p className="font-medium">
+              {greenhouseConfig.remoteUsOnly ? "Yes" : "No"}
+            </p>
+          </div>
+          <div>
             <p className="text-sm text-muted-foreground">
               Jobs analyzed per run
             </p>

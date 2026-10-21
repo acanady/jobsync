@@ -137,3 +137,34 @@ describe("runAtsPipeline", () => {
     );
   });
 });
+
+describe("runAtsPipeline remoteUsOnly", () => {
+  const jobs = [
+    job({ title: "Frontend Engineer", description: "React", location: "Remote - US" }),
+    job({ title: "Frontend Engineer", description: "React", location: "Remote - India" }),
+    job({ title: "Frontend Engineer", description: "React", location: "New York, NY" }),
+  ];
+  const corpus = [
+    ...jobs,
+    ...Array.from({ length: 10 }, () =>
+      job({ title: "Cook", description: "make food" }),
+    ),
+  ];
+
+  it("keeps only remote US jobs and reports the count", () => {
+    const result = runAtsPipeline(jobs, { ...config, remoteUsOnly: true }, [], {
+      corpus,
+    });
+    expect(result.funnel.remoteUs).toBe(1);
+    const locations = [...result.toAnalyze, ...result.toSaveUnanalyzed].map(
+      (s) => s.job.location,
+    );
+    expect(locations).toEqual(["Remote - US"]);
+  });
+
+  it("is off by default", () => {
+    const result = runAtsPipeline(jobs, config, [], { corpus });
+    expect(result.funnel.remoteUs).toBeNull();
+    expect(result.funnel.relevant).toBe(3);
+  });
+});

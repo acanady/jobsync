@@ -9,6 +9,7 @@ export interface JobDetails {
   employmentType?: string;
   isRemote?: boolean;
   workplaceType?: string;
+  country?: string; // ISO code when the board provides one (Lever)
 }
 
 export type ScraperError =

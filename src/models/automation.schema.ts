@@ -32,6 +32,7 @@ export const GreenhouseSourceConfigSchema = z.object({
   keywords: z.array(z.string().min(1).max(100)).optional(),
   locations: z.array(z.string().min(1).max(100)).optional(),
   strictLocation: z.boolean().optional(),
+  remoteUsOnly: z.boolean().optional(),
   topK: z.number().int().min(1).max(APP_CONSTANTS.ATS_LISTING_CAP).optional(),
   saveUnanalyzed: z.boolean().optional(),
 });

@@ -168,6 +168,14 @@ export async function runAtsRun(
       );
     }
 
+    if (pipeline.funnel.remoteUs !== null) {
+      automationLogger.log(
+        automation.id,
+        "info",
+        `${label} ${pipeline.funnel.remoteUs} jobs remaining after remote (US) only filter`,
+      );
+    }
+
     const capped =
       pipeline.funnel.floorSurvivors > pipeline.funnel.relevant
         ? ` (capped to ${pipeline.funnel.relevant})`
@@ -195,6 +203,13 @@ export async function runAtsRun(
           key: "located",
           label: "In location",
           count: pipeline.funnel.located,
+        });
+      }
+      if (pipeline.funnel.remoteUs !== null) {
+        stages.push({
+          key: "remoteUs",
+          label: "Remote (US)",
+          count: pipeline.funnel.remoteUs,
         });
       }
       stages.push({

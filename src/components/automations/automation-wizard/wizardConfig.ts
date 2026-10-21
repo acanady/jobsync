@@ -10,6 +10,7 @@ export const EMPTY_ATS: AtsConfigValue = {
   keywords: [],
   locations: [],
   strictLocation: false,
+  remoteUsOnly: false,
   topK: APP_CONSTANTS.MAX_JOBS_PER_RUN,
   saveUnanalyzed: true,
 };
