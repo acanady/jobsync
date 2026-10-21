@@ -1,11 +1,13 @@
 import JobsContainer from "@/components/myjobs/JobsContainer";
-import { screen, render, waitFor, act } from "@testing-library/react";
+import { screen, render, waitFor, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   getJobsList,
   getJobFilterCounts,
   getJobDetails,
   deleteJobById,
+  deleteJobsByIds,
+  dismissJobsByIds,
   updateJobStatus,
 } from "@/actions/job.actions";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -46,6 +48,8 @@ vi.mock("@/actions/job.actions", () => ({
   getJobFilterCounts: vi.fn(),
   getJobDetails: vi.fn(),
   deleteJobById: vi.fn(),
+  deleteJobsByIds: vi.fn(),
+  dismissJobsByIds: vi.fn(),
   updateJobStatus: vi.fn(),
 }));
 
@@ -1182,6 +1186,57 @@ describe("JobsContainer Search Functionality", () => {
 
       expect(screen.getByText("Frontend Developer")).toBeInTheDocument();
       expect(screen.queryByText("Full Stack Developer")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Bulk actions", () => {
+    const listJobs = (jobs = mockJobs) =>
+      (getJobsList as any).mockResolvedValue({
+        success: true,
+        data: jobs,
+        total: jobs.length,
+      });
+
+    it("deletes every selected job after confirmation and clears the selection", async () => {
+      listJobs();
+      (deleteJobsByIds as any).mockResolvedValue({ success: true, count: 2 });
+      renderComponent();
+
+      await user.click(await screen.findByLabelText("Select all loaded jobs"));
+      expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: /^Delete$/ }));
+      await user.click(
+        within(screen.getByRole("alertdialog")).getByRole("button", {
+          name: "Delete",
+        }),
+      );
+
+      await waitFor(() =>
+        expect(deleteJobsByIds).toHaveBeenCalledWith(["1", "2"]),
+      );
+      await waitFor(() =>
+        expect(screen.queryByText("2 selected")).not.toBeInTheDocument(),
+      );
+    });
+
+    it("dismisses only automation-found jobs in the selection", async () => {
+      listJobs([
+        { ...mockJobs[0], discoveryStatus: "accepted" } as (typeof mockJobs)[number],
+        mockJobs[1],
+      ]);
+      (dismissJobsByIds as any).mockResolvedValue({ success: true, count: 1 });
+      renderComponent();
+
+      await user.click(await screen.findByLabelText("Select all loaded jobs"));
+      await user.click(screen.getByRole("button", { name: /^Dismiss$/ }));
+      await user.click(
+        within(screen.getByRole("alertdialog")).getByRole("button", {
+          name: "Dismiss",
+        }),
+      );
+
+      await waitFor(() => expect(dismissJobsByIds).toHaveBeenCalledWith(["1"]));
     });
   });
 });

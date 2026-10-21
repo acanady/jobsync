@@ -3,6 +3,8 @@ import {
   createLocation,
   createJobSource,
   deleteJobById,
+  deleteJobsByIds,
+  dismissJobsByIds,
   getJobDetails,
   getJobsList,
   getJobFilterCounts,
@@ -44,6 +46,8 @@ vi.mock("@prisma/client", () => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
+      updateMany: vi.fn(),
     },
     location: {
       findMany: vi.fn(),
@@ -1774,6 +1778,66 @@ describe("jobActions", () => {
       });
     });
   });
+  describe("deleteJobsByIds", () => {
+    it("rejects unauthenticated users", async () => {
+      (getCurrentUser as any).mockResolvedValue(null);
+      await expect(deleteJobsByIds(["a"])).resolves.toStrictEqual({
+        success: false,
+        message: "Not authenticated",
+      });
+      expect(prisma.job.deleteMany).not.toHaveBeenCalled();
+    });
+    it("deletes only the user's selected jobs and returns the count", async () => {
+      (getCurrentUser as any).mockResolvedValue(mockUser);
+      (prisma.job.deleteMany as any).mockResolvedValue({ count: 2 });
+
+      await expect(deleteJobsByIds(["a", "b"])).resolves.toStrictEqual({
+        success: true,
+        count: 2,
+      });
+      expect(prisma.job.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ["a", "b"] }, userId: mockUser.id },
+      });
+    });
+    it("rejects an empty or oversized selection without touching the DB", async () => {
+      (getCurrentUser as any).mockResolvedValue(mockUser);
+      const tooMany = Array.from({ length: 501 }, (_, i) => `job-${i}`);
+
+      expect((await deleteJobsByIds([])).success).toBe(false);
+      expect((await deleteJobsByIds(tooMany)).success).toBe(false);
+      expect(prisma.job.deleteMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("dismissJobsByIds", () => {
+    it("dismisses only the user's automation-found jobs", async () => {
+      (getCurrentUser as any).mockResolvedValue(mockUser);
+      (prisma.job.updateMany as any).mockResolvedValue({ count: 1 });
+
+      await expect(dismissJobsByIds(["a", "b"])).resolves.toStrictEqual({
+        success: true,
+        count: 1,
+      });
+      expect(prisma.job.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: { in: ["a", "b"] },
+          userId: mockUser.id,
+          discoveryStatus: { not: null },
+        },
+        data: { discoveryStatus: "dismissed" },
+      });
+    });
+    it("returns the error message on failure", async () => {
+      (getCurrentUser as any).mockResolvedValue(mockUser);
+      (prisma.job.updateMany as any).mockRejectedValue(new Error("boom"));
+
+      await expect(dismissJobsByIds(["a"])).resolves.toStrictEqual({
+        success: false,
+        message: "boom",
+      });
+    });
+  });
+
   describe("saveJobMatchResult", () => {
     it("should return error when user is not authenticated", async () => {
       (getCurrentUser as any).mockResolvedValue(null);

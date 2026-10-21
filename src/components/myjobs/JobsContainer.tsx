@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Loader } from "lucide-react";
 import {
   deleteJobById,
+  deleteJobsByIds,
+  dismissJobsByIds,
   getJobDetails,
   updateJobStatus,
 } from "@/actions/job.actions";
@@ -27,6 +29,7 @@ import { useJobFilters } from "./jobs-container/useJobFilters";
 import { useJobsList } from "./jobs-container/useJobsList";
 import { downloadJobsList } from "./jobs-container/downloadJobsCsv";
 import { JobsToolbar } from "./jobs-container/JobsToolbar";
+import { BulkActionsBar } from "./jobs-container/BulkActionsBar";
 import { EMPTY_JOB_FACETS, hasJobFacets } from "@/lib/jobs/jobFacets";
 import { Button } from "../ui/button";
 
@@ -106,6 +109,66 @@ function JobsContainer({
     reloadJobs();
   };
 
+  // Bulk selection. Pruned to the loaded list, so ids that drop out after a
+  // filter change, search or reload are never acted on unseen.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev;
+      const loaded = new Set(jobs.map((j) => j.id));
+      const next = new Set([...prev].filter((id) => loaded.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [jobs]);
+
+  const onToggleSelect = (jobId: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(jobId);
+      else next.delete(jobId);
+      return next;
+    });
+  };
+
+  const onToggleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? new Set(jobs.map((j) => j.id)) : new Set());
+  };
+
+  const selectedJobs = jobs.filter((j) => selectedIds.has(j.id));
+  const dismissableCount = selectedJobs.filter((j) => j.discoveryStatus).length;
+
+  const runBulk = async (
+    action: (ids: string[]) => Promise<{
+      success: boolean;
+      count?: number;
+      message?: string;
+    }>,
+    ids: string[],
+    verb: string,
+  ) => {
+    const { success, count, message } = await action(ids);
+    if (success) {
+      toastSuccess(`${count ?? 0} job${count === 1 ? "" : "s"} ${verb}`);
+      setSelectedIds(new Set());
+    } else {
+      toastError(message);
+    }
+    reloadJobs();
+  };
+
+  const onBulkDelete = () =>
+    runBulk(deleteJobsByIds, [...selectedIds], "deleted");
+
+  const onBulkDismiss = () =>
+    runBulk(
+      dismissJobsByIds,
+      selectedJobs.filter((j) => j.discoveryStatus).map((j) => j.id),
+      "dismissed",
+    );
+
+  const onDismissJob = (jobId: string) =>
+    runBulk(dismissJobsByIds, [jobId], "dismissed");
+
   const onEditJob = async (jobId: string) => {
     const { job, success, message } = await getJobDetails(jobId);
     if (!success) {
@@ -176,6 +239,15 @@ function JobsContainer({
           addJobInitialOpen={queryParams.get("add-job") === "true"}
         />
         <CardContent>
+          {selectedIds.size > 0 && (
+            <BulkActionsBar
+              selectedCount={selectedIds.size}
+              dismissableCount={dismissableCount}
+              onDismiss={onBulkDismiss}
+              onDelete={onBulkDelete}
+              onClear={() => setSelectedIds(new Set())}
+            />
+          )}
           {initialLoading && <Loading />}
           {!initialLoading &&
             listLoaded &&
@@ -201,6 +273,9 @@ function JobsContainer({
                 editJob={onEditJob}
                 onChangeJobStatus={onChangeJobStatus}
                 onAddNote={onAddNote}
+                selectedIds={selectedIds}
+                onToggleSelect={onToggleSelect}
+                onDismissJob={onDismissJob}
               />
             ) : (
               <MyJobsTable
@@ -212,6 +287,10 @@ function JobsContainer({
                 onAddNote={onAddNote}
                 sort={sort}
                 onSort={toggleSort}
+                selectedIds={selectedIds}
+                onToggleSelect={onToggleSelect}
+                onToggleSelectAll={onToggleSelectAll}
+                onDismissJob={onDismissJob}
               />
             ))}
           {jobs.length < totalJobs && (
