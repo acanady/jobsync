@@ -30,6 +30,10 @@ describe("isRemoteUsJob", () => {
     "Latin America (Remote)",
     "New York, NY",
     "San Francisco, CA, US",
+    // Each office is judged on its own: the remote office here is Canadian
+    // and the US office is on-site, so the job is not remote-US even though
+    // the whole string mentions both "Remote" and "US".
+    "Remote - Canada; New York, NY, US",
   ])("drops Greenhouse location %j", (location) => {
     expect(gh(location)).toBe(false);
   });
@@ -48,6 +52,12 @@ describe("isRemoteUsJob", () => {
     expect(
       isRemoteUsJob({ location: "New York, NY", workplaceType: "HYBRID", country: "US" }),
     ).toBe(false);
+    // Cases where the text alone would decide the other way, so only the
+    // country code gets them right.
+    expect(isRemoteUsJob({ location: "Remote", workplaceType: "REMOTE", country: "BR" })).toBe(false);
+    expect(
+      isRemoteUsJob({ location: "Remote - Canada", workplaceType: "REMOTE", country: "US" }),
+    ).toBe(true);
   });
 
   it("treats workplaceType REMOTE as remote when there is no country", () => {
