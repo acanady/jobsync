@@ -43,6 +43,14 @@ export function StepReview({
         </span>
       </div>
       <div className="flex justify-between gap-4">
+        <span className="text-muted-foreground">Excluded titles</span>
+        <span className="font-medium text-right">
+          {atsConfig.excludeTitles?.length
+            ? atsConfig.excludeTitles.join(", ")
+            : "None"}
+        </span>
+      </div>
+      <div className="flex justify-between gap-4">
         <span className="text-muted-foreground">Locations</span>
         <span className="font-medium text-right">
           {atsConfig.locations?.length

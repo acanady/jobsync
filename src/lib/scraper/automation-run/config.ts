@@ -5,6 +5,7 @@ export interface AtsRunConfig {
   companies: { name: string; token: string; host?: "default" | "eu" }[];
   targetTitles: string[];
   keywords: string[];
+  excludeTitles: string[];
   locations: string[];
   strictLocation: boolean;
   topK: number;
@@ -24,6 +25,7 @@ export function parseAtsConfig(
       companies: cfg.companies,
       targetTitles: Array.isArray(cfg.targetTitles) ? cfg.targetTitles : [],
       keywords: Array.isArray(cfg.keywords) ? cfg.keywords : [],
+      excludeTitles: Array.isArray(cfg.excludeTitles) ? cfg.excludeTitles : [],
       locations: Array.isArray(cfg.locations) ? cfg.locations : [],
       strictLocation: !!cfg.strictLocation,
       topK:

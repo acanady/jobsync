@@ -56,6 +56,24 @@ describe("CreateAutomationSchema conditional validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("greenhouse keeps excludeTitles through validation", () => {
+    const result = CreateAutomationSchema.safeParse({
+      ...base,
+      jobBoard: "greenhouse",
+      sourceConfig: {
+        greenhouse: {
+          companies: [{ name: "Anthropic", token: "anthropic" }],
+          excludeTitles: ["Senior", "Staff"],
+        },
+      },
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.sourceConfig?.greenhouse?.excludeTitles).toEqual([
+      "Senior",
+      "Staff",
+    ]);
+  });
+
   it("greenhouse rejects topK of 0", () => {
     const result = CreateAutomationSchema.safeParse({
       ...base,

@@ -58,6 +58,22 @@ export function TargetingFields({ value, onChange }: TargetingFieldsProps) {
         }}
       />
 
+      <EntityStringChipInput
+        label="Exclude titles containing"
+        placeholder="e.g., Senior, Staff"
+        noun="term"
+        description="Optional. Jobs whose title contains any of these words are dropped before ranking."
+        values={value.excludeTitles ?? []}
+        onChange={(next) => onChange({ ...value, excludeTitles: next })}
+        // Free-form terms; nothing to look up or persist outside the config.
+        loadOptions={async () => []}
+        createOption={async (lbl) => ({
+          id: lbl,
+          label: lbl,
+          value: lbl.toLowerCase(),
+        })}
+      />
+
       {noSignal && (
         <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
           <TriangleAlert className="h-4 w-4 mt-0.5 shrink-0" />

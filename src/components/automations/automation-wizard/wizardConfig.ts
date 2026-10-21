@@ -8,6 +8,7 @@ export const EMPTY_ATS: AtsConfigValue = {
   companies: [],
   targetTitles: [],
   keywords: [],
+  excludeTitles: [],
   locations: [],
   strictLocation: false,
   topK: APP_CONSTANTS.MAX_JOBS_PER_RUN,

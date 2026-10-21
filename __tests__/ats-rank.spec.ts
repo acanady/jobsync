@@ -2,6 +2,7 @@ import {
   scoreJob,
   passesFloor,
   locationMatches,
+  titleExcluded,
   buildIdf,
 } from "@/lib/scraper/ats/rank";
 import type { JobDetails } from "@/lib/scraper/types";
@@ -227,5 +228,24 @@ describe("passesFloor", () => {
     expect(passesFloor({ ...base, titleHits: [], keywordHits: [] })).toBe(
       false,
     );
+  });
+});
+
+describe("titleExcluded", () => {
+  const terms = ["Senior", "Staff", "Sr"];
+
+  it("drops titles containing an excluded term, case-insensitively", () => {
+    expect(titleExcluded("Senior Software Engineer", terms)).toBe(true);
+    expect(titleExcluded("STAFF Engineer, Platform", terms)).toBe(true);
+    expect(titleExcluded("Sr. Backend Engineer", terms)).toBe(true);
+  });
+
+  it("matches whole terms only", () => {
+    expect(titleExcluded("Staffing Platform Engineer", terms)).toBe(false);
+    expect(titleExcluded("Seniority Systems Engineer", terms)).toBe(false);
+  });
+
+  it("keeps everything when no terms are set", () => {
+    expect(titleExcluded("Senior Software Engineer", [])).toBe(false);
   });
 });

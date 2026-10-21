@@ -1,13 +1,20 @@
 import { APP_CONSTANTS } from "@/lib/constants";
 import type { PrerankComponents } from "@/models/ai.schemas";
 import type { JobDetails } from "../types";
-import { scoreJob, passesFloor, locationMatches, buildIdf } from "./rank";
+import {
+  scoreJob,
+  passesFloor,
+  locationMatches,
+  titleExcluded,
+  buildIdf,
+} from "./rank";
 
 export interface PipelineConfig {
   targetTitles: string[];
   keywords: string[];
   locations: string[];
   strictLocation: boolean;
+  excludeTitles?: string[];
 }
 
 export interface ScoredJob {
@@ -24,13 +31,14 @@ export interface PipelineResult {
   funnel: {
     deduped: number; // jobs handed in (already deduped by the runner)
     located: number | null; // survivors after strict location gate (null if off)
+    titleFiltered: number | null; // survivors after the excluded-title gate (null if off)
     floorSurvivors: number; // jobs clearing the floor, before the cap ceiling
     scoreCut: number; // floor survivors dropped by the minimum-score gate
     relevant: number; // survivors after the score gate and cap (the LLM budget)
   };
 }
 
-// Pure funnel: optional strict-location gate -> score -> relevance floor ->
+// Pure funnel: optional strict-location gate -> excluded-title gate -> score -> relevance floor ->
 // cap ceiling -> top-K split. No I/O, no LLM; unit-testable in isolation.
 export function runAtsPipeline(
   fetchedJobs: JobDetails[],
@@ -54,7 +62,15 @@ export function runAtsPipeline(
       )
     : null;
 
-  const working = located ?? fetchedJobs;
+  const excludeTitles = config.excludeTitles ?? [];
+  const titleFiltered =
+    excludeTitles.length > 0
+      ? (located ?? fetchedJobs).filter(
+          (job) => !titleExcluded(job.title, excludeTitles),
+        )
+      : null;
+
+  const working = titleFiltered ?? located ?? fetchedJobs;
 
   const scored: ScoredJob[] = working.map((job) => {
     const { score, components } = scoreJob(
@@ -90,6 +106,7 @@ export function runAtsPipeline(
     funnel: {
       deduped,
       located: located ? located.length : null,
+      titleFiltered: titleFiltered ? titleFiltered.length : null,
       floorSurvivors: floorSurvivors.length,
       scoreCut: floorSurvivors.length - ranked.length,
       relevant: capped.length,

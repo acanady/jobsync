@@ -168,6 +168,14 @@ export async function runAtsRun(
       );
     }
 
+    if (pipeline.funnel.titleFiltered !== null) {
+      automationLogger.log(
+        automation.id,
+        "info",
+        `${label} ${pipeline.funnel.titleFiltered} jobs remaining after excluding titles with: ${config.excludeTitles.join(", ")}`,
+      );
+    }
+
     const capped =
       pipeline.funnel.floorSurvivors > pipeline.funnel.relevant
         ? ` (capped to ${pipeline.funnel.relevant})`
@@ -195,6 +203,13 @@ export async function runAtsRun(
           key: "located",
           label: "In location",
           count: pipeline.funnel.located,
+        });
+      }
+      if (pipeline.funnel.titleFiltered !== null) {
+        stages.push({
+          key: "titleFiltered",
+          label: "Title allowed",
+          count: pipeline.funnel.titleFiltered,
         });
       }
       stages.push({

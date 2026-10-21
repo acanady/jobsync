@@ -101,6 +101,14 @@ export function AutomationSearchConfig({
             </p>
           </div>
           <div>
+            <p className="text-sm text-muted-foreground">Excluded titles</p>
+            <p className="font-medium">
+              {greenhouseConfig.excludeTitles?.length
+                ? greenhouseConfig.excludeTitles.join(", ")
+                : "None"}
+            </p>
+          </div>
+          <div>
             <p className="text-sm text-muted-foreground">Locations</p>
             <p className="font-medium">
               {greenhouseConfig.locations?.length

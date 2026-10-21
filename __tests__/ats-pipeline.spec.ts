@@ -137,3 +137,37 @@ describe("runAtsPipeline", () => {
     );
   });
 });
+
+describe("runAtsPipeline excludeTitles", () => {
+  const jobs = [
+    job({ title: "Frontend Engineer", description: "React" }),
+    job({ title: "Senior Frontend Engineer", description: "React" }),
+    job({ title: "Staff Frontend Engineer", description: "React" }),
+  ];
+  const corpus = [
+    ...jobs,
+    ...Array.from({ length: 10 }, () =>
+      job({ title: "Cook", description: "make food" }),
+    ),
+  ];
+
+  it("drops excluded titles before ranking and reports the count", () => {
+    const result = runAtsPipeline(
+      jobs,
+      { ...config, excludeTitles: ["Senior", "Staff"] },
+      [],
+      { corpus },
+    );
+    expect(result.funnel.titleFiltered).toBe(1);
+    const titles = [...result.toAnalyze, ...result.toSaveUnanalyzed].map(
+      (s) => s.job.title,
+    );
+    expect(titles).toEqual(["Frontend Engineer"]);
+  });
+
+  it("is a no-op when excludeTitles is absent", () => {
+    const result = runAtsPipeline(jobs, config, [], { corpus });
+    expect(result.funnel.titleFiltered).toBeNull();
+    expect(result.funnel.relevant).toBe(3);
+  });
+});

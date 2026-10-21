@@ -34,6 +34,14 @@ function termInText(text: string, term: string): boolean {
   return re.test(text);
 }
 
+// True when the job title contains any exclusion term as a whole term, so
+// "Staff" drops "Staff Engineer" but not "Staffing Platform Engineer".
+export function titleExcluded(jobTitle: string, excludeTitles: string[]): boolean {
+  if (!excludeTitles || excludeTitles.length === 0) return false;
+  const title = (jobTitle || "").toLowerCase();
+  return excludeTitles.some((term) => termInText(title, term));
+}
+
 // Run-local inverse document frequency. A term in most board jobs scores ~0
 // (generic, e.g. "engineer"); a rare term scores ~1 (distinctive, e.g.
 // "kubernetes"). Normalized to 0..1 against the corpus size so it slots into

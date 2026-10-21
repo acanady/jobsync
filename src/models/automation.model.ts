@@ -22,6 +22,7 @@ export interface GreenhouseSourceConfig {
   companies: GreenhouseCompany[];
   targetTitles?: string[];
   keywords?: string[];
+  excludeTitles?: string[];
   locations?: string[];
   strictLocation?: boolean;
   topK?: number;
