@@ -270,3 +270,51 @@ export const deleteJobById = async (
     return handleError(error, msg);
   }
 };
+
+// Bulk actions from the jobs list. Capped so a single request can't fan out
+// unboundedly; the list loads in pages, so a selection stays well under this.
+const BulkJobIdsSchema = z.array(z.string().min(1)).min(1).max(500);
+
+export const deleteJobsByIds = async (
+  jobIds: string[],
+): Promise<{ success: boolean; count?: number; message?: string }> => {
+  try {
+    const user = await requireUser();
+    const ids = BulkJobIdsSchema.parse(jobIds);
+
+    const res = await prisma.job.deleteMany({
+      where: { id: { in: ids }, userId: user.id },
+    });
+    revalidatePath("/dashboard");
+    return { success: true, count: res.count };
+  } catch (error) {
+    const msg = "Failed to delete jobs.";
+    return handleError(error, msg);
+  }
+};
+
+// Dismissing keeps the row (so automation dedup keeps skipping the posting) but
+// hides it from the jobs list. Only automation-discovered jobs carry a
+// discoveryStatus; manually added jobs are left untouched and not counted.
+export const dismissJobsByIds = async (
+  jobIds: string[],
+): Promise<{ success: boolean; count?: number; message?: string }> => {
+  try {
+    const user = await requireUser();
+    const ids = BulkJobIdsSchema.parse(jobIds);
+
+    const res = await prisma.job.updateMany({
+      where: {
+        id: { in: ids },
+        userId: user.id,
+        discoveryStatus: { not: null },
+      },
+      data: { discoveryStatus: "dismissed" },
+    });
+    revalidatePath("/dashboard");
+    return { success: true, count: res.count };
+  } catch (error) {
+    const msg = "Failed to dismiss jobs.";
+    return handleError(error, msg);
+  }
+};

@@ -29,6 +29,7 @@ import { TooltipProvider } from "../ui/tooltip";
 import { JobActionsMenu } from "./JobActionsMenu";
 import { MatchJobButton } from "./MatchJobButton";
 import { CompanyLogo } from "./CompanyLogo";
+import { SelectCheckbox } from "./SelectCheckbox";
 
 type MyJobsTableProps = {
   jobs: JobResponse[];
@@ -39,6 +40,10 @@ type MyJobsTableProps = {
   onAddNote: (jobId: string) => void;
   sort: SortState<JobSortField> | null;
   onSort: (field: JobSortField) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (jobId: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean) => void;
+  onDismissJob?: (jobId: string) => void;
 };
 
 function MyJobsTable({
@@ -50,7 +55,13 @@ function MyJobsTable({
   onAddNote,
   sort,
   onSort,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+  onDismissJob,
 }: MyJobsTableProps) {
+  const selectable = !!onToggleSelect;
+  const selectedCount = jobs.filter((j) => selectedIds?.has(j.id)).length;
   const [alertOpen, setAlertOpen] = useState(false);
   const [jobIdToDelete, setJobIdToDelete] = useState("");
 
@@ -64,6 +75,16 @@ function MyJobsTable({
       <Table>
         <TableHeader>
           <TableRow>
+            {selectable && (
+              <TableHead className="w-[36px]">
+                <SelectCheckbox
+                  label="Select all loaded jobs"
+                  checked={jobs.length > 0 && selectedCount === jobs.length}
+                  indeterminate={selectedCount > 0}
+                  onCheckedChange={(checked) => onToggleSelectAll?.(checked)}
+                />
+              </TableHead>
+            )}
             <TableHead className="hidden w-[100px] sm:table-cell">
               <span className="sr-only">Company Logo</span>
             </TableHead>
@@ -114,7 +135,21 @@ function MyJobsTable({
         <TableBody>
           {jobs.map((job: JobResponse) => {
             return (
-              <TableRow key={job.id}>
+              <TableRow
+                key={job.id}
+                data-state={selectedIds?.has(job.id) ? "selected" : undefined}
+              >
+                {selectable && (
+                  <TableCell>
+                    <SelectCheckbox
+                      label={`Select ${job.JobTitle?.label ?? "job"}`}
+                      checked={!!selectedIds?.has(job.id)}
+                      onCheckedChange={(checked) =>
+                        onToggleSelect?.(job.id, checked)
+                      }
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="hidden sm:table-cell">
                   <CompanyLogo
                     logoUrl={job.Company?.logoUrl}
@@ -224,6 +259,7 @@ function MyJobsTable({
                       jobStatuses={jobStatuses}
                       onChangeJobStatus={onChangeJobStatus}
                       onAddNote={onAddNote}
+                      onDismissJob={onDismissJob}
                     />
                   </div>
                 </TableCell>

@@ -1,5 +1,11 @@
 "use client";
-import { ListCollapse, MoreVertical, StickyNote, Tags } from "lucide-react";
+import {
+  EyeOff,
+  ListCollapse,
+  MoreVertical,
+  StickyNote,
+  Tags,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -23,6 +29,7 @@ type JobActionsMenuProps = {
   jobStatuses: JobStatus[];
   onChangeJobStatus: (id: string, status: JobStatus) => void;
   onAddNote: (jobId: string) => void;
+  onDismissJob?: (jobId: string) => void;
 };
 
 export function JobActionsMenu({
@@ -30,6 +37,7 @@ export function JobActionsMenu({
   jobStatuses,
   onChangeJobStatus,
   onAddNote,
+  onDismissJob,
 }: JobActionsMenuProps) {
   const router = useRouter();
 
@@ -79,6 +87,19 @@ export function JobActionsMenu({
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
+          {onDismissJob && job.discoveryStatus && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                title="Hide this job and stop automations adding it again"
+                onClick={() => onDismissJob(job.id)}
+              >
+                <EyeOff className="mr-2 h-4 w-4" />
+                Dismiss
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

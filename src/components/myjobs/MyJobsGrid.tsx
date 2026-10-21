@@ -11,6 +11,9 @@ type MyJobsGridProps = {
   editJob: (id: string) => void;
   onChangeJobStatus: (id: string, status: JobStatus) => void;
   onAddNote: (jobId: string) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (jobId: string, checked: boolean) => void;
+  onDismissJob?: (jobId: string) => void;
 };
 
 function MyJobsGrid({
@@ -20,6 +23,9 @@ function MyJobsGrid({
   editJob,
   onChangeJobStatus,
   onAddNote,
+  selectedIds,
+  onToggleSelect,
+  onDismissJob,
 }: MyJobsGridProps) {
   const [alertOpen, setAlertOpen] = useState(false);
   const [jobIdToDelete, setJobIdToDelete] = useState("");
@@ -41,6 +47,9 @@ function MyJobsGrid({
             onChangeJobStatus={onChangeJobStatus}
             onAddNote={onAddNote}
             onDeleteJob={onDeleteJob}
+            selected={selectedIds?.has(job.id)}
+            onToggleSelect={onToggleSelect}
+            onDismissJob={onDismissJob}
           />
         ))}
       </div>
