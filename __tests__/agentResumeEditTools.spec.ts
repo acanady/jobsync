@@ -186,7 +186,14 @@ describe("update_resume agent tool", () => {
 
 describe("updateResumeSettled", () => {
   it("ends the turn only once a valid call produced its card", () => {
-    expect(updateResumeSettled({ toolCalls: [{ toolName: "update_resume", invalid: true }] })).toBe(false);
+    // Invalid even when a result-shaped entry exists, so it is the invalid
+    // flag — not the missing result — that keeps the turn open for a retry.
+    expect(
+      updateResumeSettled({
+        toolCalls: [{ toolName: "update_resume", invalid: true }],
+        toolResults: [{ toolName: "update_resume" }],
+      }),
+    ).toBe(false);
     expect(updateResumeSettled({ toolCalls: [{ toolName: "update_resume" }] })).toBe(false);
     expect(
       updateResumeSettled({

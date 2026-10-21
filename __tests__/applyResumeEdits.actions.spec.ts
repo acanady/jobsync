@@ -60,7 +60,8 @@ describe("applyResumeEdits", () => {
   });
 
   it("updates the resume in place, scoped to the session user", async () => {
-    const res = await applyResumeEdits({ resumeId: "r1", mode: "in_place", edits });
+    // A job is passed on purpose: in-place edits must still never relink it.
+    const res = await applyResumeEdits({ resumeId: "r1", mode: "in_place", jobId: "job-1", edits });
 
     expect(res).toEqual({ success: true, resumeId: "r1", resumeTitle: "Main", mode: "in_place" });
     expect(prisma.resume.findFirst.mock.calls[0][0].where).toEqual({ id: "r1", profile: { userId: "user-1" } });
