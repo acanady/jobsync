@@ -1,5 +1,16 @@
 # JobSync
 
+> [!IMPORTANT]
+> **This is [acanady/jobsync](https://github.com/acanady/jobsync), a fork of [Gsync/jobsync](https://github.com/Gsync/jobsync).** It adds:
+>
+> - **Automation filters** — exclude titles containing words like *Senior* or *Staff*, and a **Remote (US) only** switch
+> - **Bulk Dismiss / Delete** on the Jobs list (dismissed jobs stay out of future automation runs)
+> - **AI resume tailoring** — the assistant tailors a resume to the job you're viewing, or applies edits you dictate, and shows every change before → after for you to approve; each AI match offers to tailor afterwards
+>
+> There is no prebuilt image for this fork: `docker compose` **builds it from source** on first run (~5 minutes). Use the [Quick Start](#quick-start) below — not upstream's install or update commands.
+>
+> 🪟 **On Windows?** Follow the step-by-step **[Windows setup guide](./WINDOWS_SETUP.md)** (Docker Desktop, WSL 2, secrets, and troubleshooting).
+
 <p align="center"><strong>The self-hosted job search assistant with AI-powered resume review, job matching, and automated discovery</strong></p>
 
 <p align="center">
@@ -56,12 +67,12 @@ Track every application, get AI resume reviews and job matches, and discover new
 Make sure [Docker](https://www.docker.com) is installed and running, then:
 
 ```sh
-git clone https://github.com/Gsync/jobsync.git
+git clone https://github.com/acanady/jobsync.git
 cd jobsync
-docker compose up
+docker compose up -d --build
 ```
 
-> **Note:** The first startup downloads the prebuilt app image, so give it a moment before opening the browser.
+> **Note:** The first startup builds the app image from this fork's code (about 5 minutes), so give it a moment before opening the browser. On Windows, see the [Windows setup guide](./WINDOWS_SETUP.md).
 
 Open [http://localhost:3737](http://localhost:3737) and create your account. That's it!
 
@@ -81,17 +92,14 @@ Environment variables can be set in `docker-compose.yml`:
 
 ### Updating
 
-From the project directory, run the deploy script to pull the latest image and restart:
+From the project directory, pull this fork's latest code and rebuild:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Gsync/jobsync/main/deploy.sh | sudo bash -s
+git pull
+docker compose up -d --build
 ```
 
-On **Windows**, run the PowerShell equivalent from the project directory instead (`deploy.sh` needs WSL or Git Bash; `deploy.ps1` runs natively):
-
-```powershell
-.\deploy.ps1
-```
+The same two commands work in PowerShell on Windows. (Upstream's `deploy.sh` / `deploy.ps1` default to upstream's `main` branch and prebuilt image, so don't use them with this fork.)
 
 >Note: If you are updating in a homelab environment, edit `NEXTAUTH_URL` in your `.env` file to use your server IP address instead of `localhost`. See `.env.example` for the expected format.
 
