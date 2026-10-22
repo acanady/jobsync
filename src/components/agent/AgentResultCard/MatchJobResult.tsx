@@ -3,12 +3,20 @@
 import { AgentMatchContent } from "@/components/agent/AgentMatchContent";
 import { NoResumesNotice } from "@/components/agent/AgentResultCard/NoResumesNotice";
 import { ResumeSelectionPrompt } from "@/components/agent/AgentResultCard/ResumeSelectionPrompt";
+import { TailorOffer } from "@/components/agent/AgentResultCard/TailorOffer";
 import type { AgentMatchJobResult } from "@/models/agent.model";
 
 // The score and body come from the tool output, not from parsed prose — the
 // match is a server-side generation, so the card cannot disagree with what
 // was saved.
-export function MatchJobResult({ output }: { output: AgentMatchJobResult }) {
+export function MatchJobResult({
+  output,
+  matchId,
+}: {
+  output: AgentMatchJobResult;
+  // The tool call id; keys the tailoring offer so it is answered once.
+  matchId?: string;
+}) {
   if (output.status === "no_job") {
     return (
       <p className="text-sm">
@@ -61,6 +69,7 @@ export function MatchJobResult({ output }: { output: AgentMatchJobResult }) {
           Match not saved — {output.saveError}
         </p>
       )}
+      {matchId && <TailorOffer matchId={matchId} resumeTitle={output.resumeTitle} />}
     </div>
   );
 }
