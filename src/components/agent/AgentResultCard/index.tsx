@@ -48,7 +48,10 @@ export function AgentResultCard({ part }: { part: ToolUIPart }) {
     ) : toolName === "review_resume" ? (
       <ReviewResumeResult output={part.output as AgentReviewResumeResult} />
     ) : toolName === "match_job" ? (
-      <MatchJobResult output={part.output as AgentMatchJobResult} />
+      <MatchJobResult
+        output={part.output as AgentMatchJobResult}
+        matchId={part.toolCallId}
+      />
     ) : toolName === "generate_cover_letter" ? (
       <CoverLetterResult output={part.output as AgentCoverLetterResult} />
     ) : toolName === "tailor_resume" ? (

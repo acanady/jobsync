@@ -12,7 +12,8 @@ import { TipTapContentViewer } from "../TipTapContentViewer";
 import { Badge } from "../ui/badge";
 import { Card } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Wand2 } from "lucide-react";
+import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import { useTabQueryParam } from "@/hooks/useTabQueryParam";
 import { useAgentChat } from "@/components/agent/AgentChatProvider";
@@ -159,6 +160,8 @@ function JobDetails({
   const onMatch = () => requestChat(`Match my resume to ${jobLabel}`);
   const onCoverLetter = () =>
     requestChat(`Write a cover letter for ${jobLabel}`);
+  const onTailorResume = () =>
+    requestChat(`Tailor my resume to ${jobLabel}`);
 
   useAutoMatch(onMatch);
 
@@ -276,7 +279,24 @@ function JobDetails({
           <TabsContent value="match" className="mt-4">
             <Card className="p-6">
               {parsedMatchData && parsedMatchData.analyzed !== false ? (
-                <MatchDetails matchData={parsedMatchData} />
+                <>
+                  <MatchDetails matchData={parsedMatchData} />
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-4">
+                    <span className="text-sm text-muted-foreground">
+                      Use this match to tailor your resume to the posting.
+                    </span>
+                    <Button
+                      size="sm"
+                      className="ml-auto"
+                      onClick={onTailorResume}
+                      disabled={chatBusy}
+                      title={chatBusy ? "The assistant is busy" : undefined}
+                    >
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Tailor resume with AI
+                    </Button>
+                  </div>
+                </>
               ) : (
                 <JobTabEmptyState
                   icon={Sparkles}

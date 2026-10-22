@@ -130,6 +130,32 @@ describe("tailor_resume agent tool", () => {
     expect(args.prompt).toContain("lead with C++");
   });
 
+  it("steers tailoring with the saved match's keywords and tips, and only those", async () => {
+    findJob.mockResolvedValue({
+      status: "ok",
+      job: {
+        id: "job-1",
+        resumeId: "r1",
+        descriptionCompleteness: "full",
+        JobTitle: { label: "Integration Engineer" },
+        Company: { label: "Acme" },
+        matchData: JSON.stringify({
+          body: "## Keywords\n\n- TCP/IP\n\n## Tailoring Tips\n\n- Lead with networking.\n\n## Deal Breakers\n\n- No Go experience.",
+        }),
+      },
+    });
+    await execute(buildTailorResumeTool(ctx()), {});
+    const prompt: string = streamText.mock.calls[0][0].prompt;
+    expect(prompt).toContain("PRIOR MATCH ANALYSIS");
+    expect(prompt).toContain("Lead with networking.");
+    expect(prompt).not.toContain("No Go experience.");
+  });
+
+  it("sends no match block when the job has no saved match", async () => {
+    await execute(buildTailorResumeTool(ctx()), {});
+    expect(streamText.mock.calls[0][0].prompt).not.toContain("PRIOR MATCH ANALYSIS");
+  });
+
   it("reports no_job without generating", async () => {
     findJob.mockResolvedValue({ status: "no_job" });
     expect(await execute(buildTailorResumeTool(ctx()), {})).toEqual({ status: "no_job" });

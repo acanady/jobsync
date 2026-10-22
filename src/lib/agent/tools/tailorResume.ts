@@ -16,6 +16,7 @@ import { snapshotResume, snapshotToPromptText } from "@/lib/resumeEdits/snapshot
 import { parseTailoredResume } from "@/lib/resumeEdits/parseTailored";
 import { fitEditsToSnapshot } from "@/lib/resumeEdits/validate";
 import { hasAnyEdit } from "@/models/resumeEdits";
+import { extractMatchGuidance } from "@/lib/ai/coverLetter/matchGuidance";
 import {
   runNestedGeneration,
   type NestedGenerationGuard,
@@ -91,7 +92,14 @@ export function buildTailorResumeTool(ctx: TailorResumeContext) {
         model: ctx.model,
         userId: ctx.userId,
         system: RESUME_TAILOR_SYSTEM_PROMPT,
-        prompt: buildResumeTailorPrompt(resumeText, jobPre.data.normalizedText, raw?.requests),
+        // A saved match analysis, when there is one, steers emphasis the same
+        // way it steers the cover letter.
+        prompt: buildResumeTailorPrompt(
+          resumeText,
+          jobPre.data.normalizedText,
+          raw?.requests,
+          extractMatchGuidance(job.matchData),
+        ),
         temperature: TEMPERATURES.FEEDBACK,
         numCtx: APP_CONSTANTS.AI_OLLAMA_NUM_CTX,
         timeoutMs: APP_CONSTANTS.AI_RESUME_REVIEW_TIMEOUT_MS,

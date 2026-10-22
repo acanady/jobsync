@@ -277,6 +277,24 @@ describe("JobDetails – match data display", () => {
     expect(screen.getByTestId("match-details")).toBeInTheDocument();
   });
 
+  it("offers tailoring from a saved match and asks the chat to tailor this job", async () => {
+    onTab("match");
+    chat.approvalPending = false;
+    const matchData = JSON.stringify({ matchScore: 85, summary: "Good match" });
+    render(<JobDetails {...baseProps} job={makeJob({ matchScore: 85, matchData })} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /tailor resume with ai/i }));
+    await act(async () => {});
+    expect(chat.open).toHaveBeenCalled();
+    expect(chat.sendMessage.mock.calls[0][0].parts[0].text).toMatch(/^Tailor my resume to /);
+  });
+
+  it("does not offer tailoring before there is a match", () => {
+    onTab("match");
+    render(<JobDetails {...baseProps} job={makeJob()} />);
+    expect(screen.queryByRole("button", { name: /tailor resume with ai/i })).toBeNull();
+  });
+
   it("shows the empty state on the AI Match tab when the job has no matchData", () => {
     onTab("match");
     render(<JobDetails {...baseProps} job={makeJob()} />);
