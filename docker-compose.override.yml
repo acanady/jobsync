@@ -1,0 +1,9 @@
+# This fork's features are not in upstream's prebuilt image, so build JobSync
+# from this checkout. Docker Compose merges this file into docker-compose.yml
+# automatically; docker-compose.yml itself stays identical to upstream so
+# upstream updates merge cleanly. Delete this file to run upstream's image.
+services:
+  app:
+    image: jobsync-local:latest
+    build: .
+    pull_policy: build

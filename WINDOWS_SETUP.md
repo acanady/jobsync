@@ -8,10 +8,11 @@ are not in upstream JobSync:
 - assistant tools to **tailor a resume to a job** and **edit a resume by chat**,
   with a before/after card you approve, plus a "tailor it?" offer after each AI match
 
-Those features live on the **`acanady-dev`** branch. The fork's `main` branch is
-an unchanged copy of upstream, and there is **no prebuilt Docker image** for the
-fork — you build it once on your own machine (about 5 minutes). Node.js is **not**
-needed to run it; Docker does the build.
+Those features live on the **`acanady-dev`** branch, which is the fork's default
+branch (the fork's `main` is an unchanged copy of upstream). There is **no
+prebuilt Docker image** for the fork: `docker compose` builds it from the code on
+your machine the first time (about 5 minutes). Node.js is **not** needed to run
+it; Docker does the build.
 
 ---
 
@@ -52,20 +53,18 @@ needed to run it; Docker does the build.
 
 ---
 
-## 2. Get the code (with Linux line endings)
+## 2. Get the code
 
 ```powershell
 cd $HOME
-git clone -c core.autocrlf=false --branch acanady-dev https://github.com/acanady/jobsync.git
+git clone https://github.com/acanady/jobsync.git
 cd jobsync
+git branch --show-current
 ```
 
-**Why `-c core.autocrlf=false` matters:** by default Git for Windows converts
-files to Windows line endings. The container's start-up script
-(`docker-entrypoint.sh`) then fails inside Linux with an error like
-`exec /app/docker-entrypoint.sh: no such file or directory`. The flag keeps the
-files exactly as they are in the repository. If you already cloned without it,
-delete the folder and clone again with the command above.
+The last command should print `acanady-dev`. (The repository's `.gitattributes`
+keeps the container's shell scripts in Linux line endings on Windows, so no
+special Git settings are needed.)
 
 ---
 
@@ -101,27 +100,11 @@ NEXTAUTH_URL=http://localhost:3737
 
 ---
 
-## 4. Build from this fork instead of pulling upstream's image
+## 4. Build and start
 
-The included `docker-compose.yml` pulls upstream's prebuilt image, which does
-**not** contain this fork's features. Create `docker-compose.override.yml` in the
-same folder so Docker builds from your checkout instead:
-
-```powershell
-@"
-services:
-  app:
-    image: jobsync-local:latest
-    build: .
-    pull_policy: build
-"@ | Set-Content -Encoding utf8 docker-compose.override.yml
-```
-
-Docker Compose picks this file up automatically.
-
----
-
-## 5. Build and start
+The repository includes `docker-compose.override.yml`, which Docker Compose
+merges in automatically: it builds JobSync from this code instead of pulling
+upstream's prebuilt image (which lacks this fork's features).
 
 ```powershell
 docker compose up -d --build
@@ -143,7 +126,7 @@ folder up to keep your jobs and resumes.
 
 ---
 
-## 6. Everyday use
+## 5. Everyday use
 
 | Task | Command (from the `jobsync` folder) |
 |---|---|
@@ -152,12 +135,12 @@ folder up to keep your jobs and resumes.
 | View logs | `docker compose logs -f` |
 | Update to the latest fork code | `git pull` then `docker compose up -d --build` |
 
-Use these instead of `deploy.ps1`: that script is written for upstream's
-prebuilt image.
+Use these instead of `deploy.ps1` / `deploy.sh`: those scripts default to the
+`main` branch and upstream's prebuilt image.
 
 ---
 
-## 7. Optional: Node.js, for changing the code or running the tests
+## 6. Optional: Node.js, for changing the code or running the tests
 
 You only need this to develop, not to run JobSync.
 
@@ -188,9 +171,9 @@ You only need this to develop, not to run JobSync.
 
 | Symptom | Fix |
 |---|---|
-| `exec /app/docker-entrypoint.sh: no such file or directory` | Line endings — re-clone with `-c core.autocrlf=false` (step 2), then `docker compose up -d --build`. |
+| `exec /app/docker-entrypoint.sh: no such file or directory` | The script has Windows line endings, usually from a copy made outside Git. Run `git checkout -- docker-entrypoint.sh`, then `docker compose up -d --build`. |
 | Saved API keys stop working | `ENCRYPTION_KEY` changed or missing. Restore the original value. |
 | Build killed / out of memory | Raise WSL memory (step 1 note). |
-| New fork features missing | You are running upstream's image — check `docker-compose.override.yml` exists (step 4) and that `git branch` shows `acanady-dev`. |
+| New fork features missing | You are running upstream's image — check `docker-compose.override.yml` exists and that `git branch --show-current` prints `acanady-dev`, then `docker compose up -d --build`. |
 | Automations run at the wrong hour | Set `TZ` in `.env`, then `docker compose up -d`. |
 | Can't reach Ollama on this PC | Keep `OLLAMA_BASE_URL=http://host.docker.internal:11434` (the default). |
