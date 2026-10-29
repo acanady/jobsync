@@ -7,6 +7,8 @@ are not in upstream JobSync:
 - **bulk dismiss / delete** on the Jobs list
 - assistant tools to **tailor a resume to a job** and **edit a resume by chat**,
   with a before/after card you approve, plus a "tailor it?" offer after each AI match
+- an **Indeed (JobSpy)** automation board that searches Indeed by job title,
+  served by a small `jobspy` container Compose runs next to the app
 
 Those features live on the **`acanady-dev`** branch, which is the fork's default
 branch (the fork's `main` is an unchanged copy of upstream). There is **no
@@ -117,7 +119,8 @@ docker compose ps
 docker compose logs --tail 20
 ```
 
-You should see `Ready in …ms` and `[Scheduler] Started successfully`. Open
+You should see two containers, `jobsync_app` and `jobsync_jobspy`, and in the
+logs `Ready in …ms` and `[Scheduler] Started successfully`. Open
 <http://localhost:3737> and create your account. Add your AI provider and API
 key in **Settings**.
 
@@ -176,4 +179,6 @@ You only need this to develop, not to run JobSync.
 | Build killed / out of memory | Raise WSL memory (step 1 note). |
 | New fork features missing | You are running upstream's image — check `docker-compose.override.yml` exists and that `git branch --show-current` prints `acanady-dev`, then `docker compose up -d --build`. |
 | Automations run at the wrong hour | Set `TZ` in `.env`, then `docker compose up -d`. |
+| Indeed (JobSpy) runs fail with "the JobSpy service is not reachable" | Run `docker compose ps`; if `jobsync_jobspy` is missing or unhealthy, run `docker compose up -d --build` and check `docker compose logs jobspy`. |
+| Indeed (JobSpy) runs report "429" or "blocked" | Indeed is rate-limiting your IP. Keep one JobSpy automation a day with fewer results per search; it usually clears within a day. |
 | Can't reach Ollama on this PC | Keep `OLLAMA_BASE_URL=http://host.docker.internal:11434` (the default). |

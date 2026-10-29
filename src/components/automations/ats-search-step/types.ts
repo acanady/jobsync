@@ -1,9 +1,20 @@
-import type { LeverSourceConfig } from "@/models/automation.model";
+import type {
+  GreenhouseSourceConfig,
+  JobSpySourceConfig,
+  LeverSourceConfig,
+} from "@/models/automation.model";
 
 // The step is provider-agnostic; it edits the canonical Lever config shape — a
 // superset of Greenhouse's, where the extra per-company `host` is unused and
 // UI-invisible for Greenhouse.
 export type AtsConfigValue = LeverSourceConfig;
+
+// The targeting and run-option fields every board shares; TargetingFields
+// and RunOptionsFields edit just these, so they serve company boards and the
+// JobSpy search alike.
+export type TargetingValue = Omit<GreenhouseSourceConfig, "companies">;
+
+export type SearchConfigValue = JobSpySourceConfig;
 
 export type EntityOption = { id: string; label: string; value: string };
 

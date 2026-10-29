@@ -48,6 +48,7 @@ interface MapperOutput {
   automationId: string;
   jobUrl: string;
   description: string;
+  salaryRange?: string;
   jobType: string;
   workplaceType: string | null;
   createdAt: Date;
@@ -82,7 +83,7 @@ export async function mapScrapedJobToJobRecord(
       ? resolveLocation(scrapedJob.location, userId)
       : Promise.resolve(null),
     resolveCompany(scrapedJob.company, userId),
-    resolveJobSource(capitalize(scrapedJob.sourceBoard), userId),
+    resolveJobSource(scrapedJob.sourceSite ?? capitalize(scrapedJob.sourceBoard), userId),
   ]);
   const statusId = await getDefaultJobStatus();
 
@@ -99,6 +100,7 @@ export async function mapScrapedJobToJobRecord(
     automationId,
     jobUrl: scrapedJob.sourceUrl,
     description: scrapedJob.description,
+    ...(scrapedJob.salaryRange ? { salaryRange: scrapedJob.salaryRange } : {}),
     jobType: normalizeJobType(scrapedJob.employmentType),
     workplaceType:
       scrapedJob.workplaceType ?? normalizeWorkplaceType(scrapedJob.isRemote),

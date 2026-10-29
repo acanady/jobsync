@@ -2,7 +2,7 @@ import type {
   Automation,
   FunnelStage,
 } from "@/models/automation.model";
-import type { AtsProvider } from "../ats/types";
+import type { RunSource } from "../ats/types";
 import { runAtsPipeline } from "../ats/pipeline";
 import type { ScoredJob } from "../ats/pipeline";
 import { dedupeJobs } from "../utils";
@@ -24,24 +24,34 @@ import { finalizeRun } from "./finalize";
 
 export async function runAtsRun(
   automation: Automation,
-  provider: AtsProvider,
+  source: RunSource,
   runId: string,
   resume: ResumeWithSections,
   signal?: AbortSignal,
 ): Promise<RunnerResult> {
+  const provider = source.provider;
   const label = `[${provider.label}]`;
   const config = parseAtsConfig(automation.sourceConfig, automation.jobBoard);
+  // A search source runs one search per term; the run reports each term the
+  // way it reports a company board.
+  const isSearch = source.kind === "search";
+  const units = isSearch
+    ? (config?.search?.searchTerms ?? []).map((term) => ({ name: term, token: term }))
+    : (config?.companies ?? []);
+  const noun = isSearch
+    ? { one: "search", many: "searches", failed: "failed", partial: "had errors" }
+    : { one: "board", many: "boards", failed: "unreachable", partial: "unreachable" };
 
-  if (!config || config.companies.length === 0) {
+  if (!config || units.length === 0) {
     automationLogger.log(
       automation.id,
       "error",
-      `${label} No companies configured`,
+      `${label} ${isSearch ? "No search terms configured" : "No companies configured"}`,
     );
     automationLogger.endRun(automation.id);
     return await finalizeRun(runId, {
       status: "failed",
-      errorMessage: "no_companies",
+      errorMessage: isSearch ? "no_search_terms" : "no_companies",
       jobsSearched: 0,
       jobsDeduplicated: 0,
       jobsProcessed: 0,
@@ -54,29 +64,40 @@ export async function runAtsRun(
     automationLogger.log(
       automation.id,
       "info",
-      `${label} Fetching ${config.companies.length} companies...`,
+      isSearch
+        ? `${label} Running ${units.length} ${units.length === 1 ? noun.one : noun.many}...`
+        : `${label} Fetching ${units.length} companies...`,
     );
 
-    const { jobs, errors } = await provider.search(config.companies);
+    const { jobs, errors } =
+      source.kind === "search"
+        ? await source.provider.search(config.search!, signal)
+        : await source.provider.search(config.companies);
 
     for (const err of errors) {
       automationLogger.log(
         automation.id,
         "warning",
-        `${label} Board '${err.token}' ${err.reason} — skipped`,
+        isSearch
+          ? `${label} Search '${err.token}': ${err.reason} — skipped`
+          : `${label} Board '${err.token}' ${err.reason} — skipped`,
       );
     }
 
-    const nameByToken = new Map(config.companies.map((c) => [c.token, c.name]));
+    const nameByToken = new Map(units.map((c) => [c.token, c.name]));
     const boardErrors: BoardFailure[] = errors.map((e) => ({
       token: e.token,
       name: nameByToken.get(e.token) ?? e.token,
       reason: e.reason,
     }));
-    const total = config.companies.length;
+    const total = units.length;
+    // A search can report several problems for one term; count terms. A term
+    // can also report a problem and still return jobs, so the run only fails
+    // when nothing came back at all.
+    const failedUnits = new Set(errors.map((e) => e.token)).size;
 
-    if (errors.length > 0 && errors.length === total) {
-      const message = `All ${total} boards unreachable`;
+    if (failedUnits > 0 && failedUnits >= total && jobs.length === 0) {
+      const message = `All ${total} ${noun.many} ${noun.failed}`;
       automationLogger.log(automation.id, "error", `${label} ${message}`);
       automationLogger.endRun(automation.id);
       return await finalizeRun(runId, {
@@ -92,7 +113,7 @@ export async function runAtsRun(
     }
 
     const boardNote =
-      errors.length > 0 ? `${errors.length} of ${total} boards unreachable` : null;
+      failedUnits > 0 ? `${failedUnits} of ${total} ${noun.many} ${noun.partial}` : null;
     // One place decides the terminal status for every completed path below.
     const outcome = (aiError: string | null) => ({
       status: aiError || boardNote ? ("completed_with_errors" as const) : ("completed" as const),
@@ -106,7 +127,9 @@ export async function runAtsRun(
     automationLogger.log(
       automation.id,
       "success",
-      `${label} Fetched ${jobsSearched} jobs across ${config.companies.length} boards`,
+      isSearch
+        ? `${label} Found ${jobsSearched} jobs across ${total} ${total === 1 ? noun.one : noun.many}`
+        : `${label} Fetched ${jobsSearched} jobs across ${total} boards`,
       { jobsSearched },
     );
 

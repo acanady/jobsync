@@ -2,18 +2,29 @@
 
 import { APP_CONSTANTS } from "@/lib/constants";
 import type { CreateAutomationInput } from "@/models/automation.schema";
+import { automationBoardLabel } from "@/models/automation.model";
 import type { AtsConfigValue } from "../AtsSearchStep";
+import type { SearchConfigValue } from "../ats-search-step/types";
+import { postedWithinLabel } from "../JobSpySearchStep";
 import type { WizardResume } from "./wizardConfig";
 
 export function StepReview({
   formValues,
-  atsConfig,
+  atsConfig: companyConfig,
+  searchConfig,
   selectedResume,
 }: {
   formValues: CreateAutomationInput;
   atsConfig: AtsConfigValue;
+  searchConfig: SearchConfigValue;
   selectedResume?: WizardResume;
 }) {
+  const isSearch = formValues.jobBoard === "jobspy";
+  // The targeting rows below read the same fields from either config.
+  const atsConfig = isSearch ? searchConfig : companyConfig;
+  const searches = searchConfig.searchTerms?.length
+    ? searchConfig.searchTerms
+    : (searchConfig.targetTitles ?? []);
   return (
     <div className="rounded-lg border p-4 space-y-3">
       <div className="flex justify-between">
@@ -22,18 +33,47 @@ export function StepReview({
       </div>
       <div className="flex justify-between">
         <span className="text-muted-foreground">Job Board</span>
-        <span className="font-medium capitalize">
-          {formValues.jobBoard || "-"}
+        <span className="font-medium">
+          {formValues.jobBoard ? automationBoardLabel(formValues.jobBoard) : "-"}
         </span>
       </div>
-      <div className="flex justify-between gap-4">
-        <span className="text-muted-foreground">Companies</span>
-        <span className="font-medium text-right">
-          {atsConfig.companies?.length
-            ? atsConfig.companies.map((c) => c.name).join(", ")
-            : "-"}
-        </span>
-      </div>
+      {isSearch ? (
+        <>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Searches</span>
+            <span className="font-medium text-right">
+              {searches.length ? searches.join(", ") : "-"}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Search location</span>
+            <span className="font-medium text-right">
+              {searchConfig.location?.trim() || APP_CONSTANTS.JOBSPY_DEFAULT_LOCATION}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Posted within</span>
+            <span className="font-medium text-right">
+              {postedWithinLabel(searchConfig.hoursOld)}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Results per search</span>
+            <span className="font-medium text-right">
+              {searchConfig.resultsPerTerm ?? APP_CONSTANTS.JOBSPY_DEFAULT_RESULTS_PER_TERM}
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className="flex justify-between gap-4">
+          <span className="text-muted-foreground">Companies</span>
+          <span className="font-medium text-right">
+            {companyConfig.companies?.length
+              ? companyConfig.companies.map((c) => c.name).join(", ")
+              : "-"}
+          </span>
+        </div>
+      )}
       <div className="flex justify-between gap-4">
         <span className="text-muted-foreground">Target titles</span>
         <span className="font-medium text-right">

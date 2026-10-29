@@ -1,6 +1,6 @@
 import db from "@/lib/db";
 import type { Automation } from "@/models/automation.model";
-import { ATS_PROVIDERS } from "./ats/registry";
+import { runSourceFor } from "./ats/registry";
 import { AiProvider } from "@/models/ai.model";
 import { automationLogger } from "@/lib/automation-logger";
 import { PROVIDER_VERIFIERS } from "@/lib/ai/provider-registry.server";
@@ -216,8 +216,8 @@ async function runAutomationTraced(
       `Resume loaded: ${resume.title}`,
     );
 
-    const atsProvider = ATS_PROVIDERS[automation.jobBoard];
-    if (!atsProvider) {
+    const source = runSourceFor(automation.jobBoard);
+    if (!source) {
       // A retired board (jsearch) left on an existing row. The scheduler
       // filters these out; this covers a direct or manual invocation.
       const message = `Job board "${automation.jobBoard}" has been removed - delete this automation`;
@@ -237,7 +237,7 @@ async function runAutomationTraced(
 
     return await runAtsRun(
       automation,
-      atsProvider,
+      source,
       run.id,
       resume as ResumeWithSections,
       effectiveSignal,

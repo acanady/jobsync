@@ -1,0 +1,5 @@
+# Pinned: JobSpy's scrapers break when boards change their pages, so upgrades
+# are deliberate (bump, rebuild, rerun the live test).
+python-jobspy==1.4.1
+fastapi==0.162.0
+uvicorn==0.54.0

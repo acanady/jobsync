@@ -60,10 +60,15 @@ export function StepBasics({
                 </SelectItem>
                 <SelectItem value="lever">Lever (company boards)</SelectItem>
                 <SelectItem value="ashby">Ashby (company boards)</SelectItem>
+                <SelectItem value="jobspy">
+                  Indeed via JobSpy (keyword search)
+                </SelectItem>
               </SelectContent>
             </Select>
             <FormDescription>
-              Track specific companies&apos; job boards
+              {field.value === "jobspy"
+                ? "Search Indeed for roles at any company"
+                : "Track specific companies' job boards"}
             </FormDescription>
             <FormMessage />
           </FormItem>

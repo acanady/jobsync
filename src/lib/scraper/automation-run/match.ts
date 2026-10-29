@@ -7,7 +7,7 @@ import {
   removeHtmlTags,
 } from "@/lib/ai";
 import { APP_CONSTANTS } from "@/lib/constants";
-import type { JobBoard } from "@/models/automation.model";
+import type { AutomationBoard } from "@/models/automation.model";
 import type { AiSettings } from "@/models/userSettings.model";
 import {
   genAiRequestAttrs,
@@ -33,7 +33,7 @@ export interface MatchResult {
 export async function matchJobToResume(
   job: JobDetails,
   resume: ResumeWithSections,
-  sourceBoard: JobBoard,
+  sourceBoard: AutomationBoard,
   aiSettings: AiSettings,
   userId: string,
   signal?: AbortSignal,

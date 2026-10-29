@@ -38,6 +38,8 @@ export async function persistDiscoveredJob(
     description: job.description,
     sourceUrl: normalizeJobUrl(job.url),
     sourceBoard: automation.jobBoard,
+    sourceSite: job.site,
+    salaryRange: job.salary,
     employmentType: job.employmentType,
     isRemote: job.isRemote,
     workplaceType: job.workplaceType,

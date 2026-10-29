@@ -7,3 +7,15 @@ services:
     image: jobsync-local:latest
     build: .
     pull_policy: build
+    environment:
+      - JOBSPY_SERVICE_URL=${JOBSPY_SERVICE_URL:-http://jobspy:8000}
+
+  # Python sidecar wrapping the JobSpy scraper (Indeed search) for the JobSpy
+  # automation source. Reachable only from the app on Compose's internal
+  # network: it publishes no port.
+  jobspy:
+    image: jobsync-jobspy:latest
+    build: ./jobspy-service
+    pull_policy: build
+    container_name: jobsync_jobspy
+    restart: unless-stopped

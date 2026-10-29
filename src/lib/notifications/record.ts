@@ -1,10 +1,9 @@
 import "server-only";
 import db from "@/lib/db";
 import { log } from "@/lib/telemetry";
-import { ATS_PROVIDERS } from "@/lib/scraper/ats/registry";
+import { boardLabel } from "@/lib/scraper/ats/registry";
 import type { FinalizeData } from "@/lib/scraper/automation-run/finalize";
 import type { BoardFailure } from "@/lib/scraper/automation-run/types";
-import type { JobBoard } from "@/models/automation.model";
 import type {
   BoardFailurePayload,
   BoardPayload,
@@ -70,9 +69,7 @@ export async function recordRunNotifications(
           data: { ...base, kind: "error", payload: JSON.stringify(err) },
         });
       }
-      const provider =
-        ATS_PROVIDERS[run.automation.jobBoard as JobBoard]?.label ??
-        run.automation.jobBoard;
+      const provider = boardLabel(run.automation.jobBoard);
       for (const board of boards) {
         await upsertBoardRow(base, provider, board);
       }

@@ -81,13 +81,16 @@ function scoreText(score: number) {
   return `SCORES: match=${score} recommendation=strong\n\n## Summary\nGreat fit`;
 }
 
+// Numeric ids, like real Greenhouse postings: dedup trusts a board id over
+// title/company/location, so several same-titled fixtures stay distinct.
+let nextGreenhouseId = 1000;
 function makeJob(title: string, description = "") {
   return {
     title,
     company: "Acme",
     location: "Remote",
     description,
-    url: `https://job-boards.greenhouse.io/acme/jobs/${Math.random()}`,
+    url: `https://job-boards.greenhouse.io/acme/jobs/${nextGreenhouseId++}`,
     postedDate: "2026-06-01T00:00:00Z",
   };
 }

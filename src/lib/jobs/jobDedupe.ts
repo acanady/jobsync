@@ -1,5 +1,5 @@
 import prisma from "@/lib/db";
-import { jobDedupeKey, normalizeJobUrl } from "@/lib/scraper/utils";
+import { jobDedupeKey, jobDedupeKeySets, normalizeJobUrl } from "@/lib/scraper/utils";
 
 export interface ExistingJobRef {
   id: string;
@@ -7,8 +7,9 @@ export interface ExistingJobRef {
   company: string;
 }
 
-// Builds a dedupe-key -> job identity map over a user's saved jobs, using the
-// same canonical key (jobDedupeKey) as batch dedup. Shared by the automation
+// Builds a dedupe-key -> job identity map over a user's saved jobs, holding
+// every key each job is registered under (jobDedupeKeySets().own), which
+// batch dedup probes. Shared by the automation
 // runner (keys only, via Map.has) and add_job duplicate detection (needs the
 // identity to report which existing job matched).
 export async function getExistingJobDedupeMap(
@@ -27,18 +28,20 @@ export async function getExistingJobDedupeMap(
 
   const map = new Map<string, ExistingJobRef>();
   for (const job of jobs) {
-    const key = jobDedupeKey({
+    const { own: keys } = jobDedupeKeySets({
       url: job.jobUrl,
       title: job.JobTitle?.label,
       company: job.Company?.label,
       location: job.Location?.label ?? undefined,
     });
-    if (!map.has(key)) {
-      map.set(key, {
-        id: job.id,
-        title: job.JobTitle?.label ?? "",
-        company: job.Company?.label ?? "",
-      });
+    for (const key of keys) {
+      if (!map.has(key)) {
+        map.set(key, {
+          id: job.id,
+          title: job.JobTitle?.label ?? "",
+          company: job.Company?.label ?? "",
+        });
+      }
     }
   }
   return map;

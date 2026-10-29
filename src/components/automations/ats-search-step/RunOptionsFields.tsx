@@ -4,14 +4,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { APP_CONSTANTS } from "@/lib/constants";
-import type { AtsConfigValue } from "./types";
+import type { TargetingValue } from "./types";
 
-interface RunOptionsFieldsProps {
-  value: AtsConfigValue;
-  onChange: (next: AtsConfigValue) => void;
+interface RunOptionsFieldsProps<T extends TargetingValue> {
+  value: T;
+  onChange: (next: T) => void;
 }
 
-export function RunOptionsFields({ value, onChange }: RunOptionsFieldsProps) {
+export function RunOptionsFields<T extends TargetingValue>({
+  value,
+  onChange,
+}: RunOptionsFieldsProps<T>) {
   return (
     <>
       <div className="space-y-2">
