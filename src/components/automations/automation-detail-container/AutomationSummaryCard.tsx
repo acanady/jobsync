@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { AlertTriangle, Clock, FileText, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { isSearchBoard, type AutomationWithResume } from "@/models/automation.model";
+import { automationBoardLabel, type AutomationWithResume } from "@/models/automation.model";
 import { AutomationSearchConfig } from "./AutomationSearchConfig";
 
 interface AutomationSummaryCardProps {
@@ -49,7 +49,7 @@ export function AutomationSummaryCard({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Job Board</p>
-            <p className="font-medium capitalize">{automation.jobBoard}</p>
+            <p className="font-medium">{automationBoardLabel(automation.jobBoard)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Match Threshold</p>
@@ -108,13 +108,11 @@ export function AutomationSummaryCard({
           </div>
         </div>
 
-        {!isSearchBoard(automation.jobBoard) && (
-          <AutomationSearchConfig
-            sourceConfig={automation.sourceConfig}
-            jobBoard={automation.jobBoard}
-            retired={retired}
-          />
-        )}
+        <AutomationSearchConfig
+          sourceConfig={automation.sourceConfig}
+          jobBoard={automation.jobBoard}
+          retired={retired}
+        />
       </CardContent>
     </Card>
   );

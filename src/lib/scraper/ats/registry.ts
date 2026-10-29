@@ -1,4 +1,9 @@
-import type { AutomationBoard, JobBoard, SearchBoard } from "@/models/automation.model";
+import {
+  AUTOMATION_BOARD_LABELS,
+  type AutomationBoard,
+  type JobBoard,
+  type SearchBoard,
+} from "@/models/automation.model";
 import { searchGreenhouseJobs } from "../greenhouse";
 import { searchJobSpy } from "../jobspy";
 import { searchLeverJobs } from "../lever";
@@ -19,7 +24,7 @@ export const ATS_PROVIDERS: Partial<Record<JobBoard, AtsProvider>> = {
 };
 
 export const SEARCH_PROVIDERS: Record<SearchBoard, SearchProvider> = {
-  jobspy: { id: "jobspy", label: "Indeed (JobSpy)", search: searchJobSpy },
+  jobspy: { id: "jobspy", label: AUTOMATION_BOARD_LABELS.jobspy, search: searchJobSpy },
 };
 
 // The run source for an automation's board, or undefined for a board that no

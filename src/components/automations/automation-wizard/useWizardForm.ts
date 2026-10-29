@@ -12,13 +12,18 @@ import {
   updateAutomation,
 } from "@/actions/automation.actions";
 import { toastSuccess, toastError } from "@/lib/toast";
-import type { AutomationWithResume, JobBoard } from "@/models/automation.model";
+import { APP_CONSTANTS } from "@/lib/constants";
+import type {
+  AutomationBoard,
+  AutomationWithResume,
+} from "@/models/automation.model";
 import type { AtsConfigValue } from "../AtsSearchStep";
+import type { SearchConfigValue } from "../ats-search-step/types";
 import {
   EMPTY_ATS,
+  EMPTY_SEARCH,
   STEPS,
   parseEditSourceConfig,
-  type AtsKey,
 } from "./wizardConfig";
 
 interface UseWizardFormArgs {
@@ -44,7 +49,7 @@ export function useWizardForm({
     mode: "onChange",
     defaultValues: {
       name: editAutomation?.name ?? "",
-      jobBoard: (editAutomation?.jobBoard as JobBoard) ?? "greenhouse",
+      jobBoard: (editAutomation?.jobBoard as AutomationBoard) ?? "greenhouse",
       keywords: editAutomation?.keywords ?? "",
       location: editAutomation?.location ?? "",
       sourceConfig: parseEditSourceConfig(editAutomation?.sourceConfig),
@@ -58,7 +63,7 @@ export function useWizardForm({
     if (open) {
       form.reset({
         name: editAutomation?.name ?? "",
-        jobBoard: (editAutomation?.jobBoard as JobBoard) ?? "greenhouse",
+        jobBoard: (editAutomation?.jobBoard as AutomationBoard) ?? "greenhouse",
         keywords: editAutomation?.keywords ?? "",
         location: editAutomation?.location ?? "",
         sourceConfig: parseEditSourceConfig(editAutomation?.sourceConfig),
@@ -100,18 +105,30 @@ export function useWizardForm({
     }
   };
 
-  // The wizard's board picker offers company boards only, so the form never
-  // holds a search board here.
-  const atsKey = formValues.jobBoard as AtsKey;
+  // The config being edited lives under the selected board's key; a board
+  // switch starts from that board's empty config.
+  const atsKey: AutomationBoard = formValues.jobBoard ?? "greenhouse";
+  const isSearch = atsKey === "jobspy";
   const atsConfig: AtsConfigValue =
-    formValues.sourceConfig?.[atsKey] ?? EMPTY_ATS;
+    (atsKey !== "jobspy" && formValues.sourceConfig?.[atsKey]) || EMPTY_ATS;
+  const searchConfig: SearchConfigValue =
+    formValues.sourceConfig?.jobspy ?? EMPTY_SEARCH;
+  // What a JobSpy automation will search: its search terms, else its titles.
+  const searchCount = (
+    searchConfig.searchTerms?.length
+      ? searchConfig.searchTerms
+      : (searchConfig.targetTitles ?? [])
+  ).length;
 
   const canGoNext = () => {
     switch (step) {
       case 0:
         return (formValues.name?.trim().length ?? 0) > 0;
       case 1:
-        return (atsConfig.companies?.length ?? 0) > 0;
+        return isSearch
+          ? searchCount > 0 &&
+              searchCount <= APP_CONSTANTS.JOBSPY_MAX_SEARCH_TERMS
+          : (atsConfig.companies?.length ?? 0) > 0;
       case 2:
         return (formValues.resumeId?.length ?? 0) > 0;
       case 3:
@@ -165,6 +182,7 @@ export function useWizardForm({
     isSubmitting,
     atsKey,
     atsConfig,
+    searchConfig,
     takenHours,
     canGoNext,
     nextStep,

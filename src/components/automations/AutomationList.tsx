@@ -35,7 +35,10 @@ import {
   Zap,
 } from "lucide-react";
 import type { AutomationWithResume } from "@/models/automation.model";
-import { isRetiredBoard } from "@/models/automation.model";
+import {
+  automationBoardLabel,
+  isRetiredBoard,
+} from "@/models/automation.model";
 import {
   deleteAutomation,
   pauseAutomation,
@@ -133,8 +136,14 @@ export function AutomationList({
               return null;
             }
           })();
+          // A JobSpy automation shows its searches where boards show companies.
+          const searchTerms: string[] = ats?.searchTerms?.length
+            ? ats.searchTerms
+            : (ats?.targetTitles ?? []);
           const atsCompanies: { name: string; token: string }[] =
-            ats?.companies ?? [];
+            automation.jobBoard === "jobspy"
+              ? searchTerms.map((term) => ({ name: term, token: term }))
+              : (ats?.companies ?? []);
           const atsTitles: string[] = ats?.targetTitles ?? [];
           const atsLocations: string[] = ats?.locations ?? [];
           const atsKeywords: string[] = ats?.keywords ?? [];
@@ -154,8 +163,8 @@ export function AutomationList({
                   >
                     {automation.name}
                   </Link>
-                  <Badge variant="outline" className="capitalize">
-                    {automation.jobBoard}
+                  <Badge variant="outline">
+                    {automationBoardLabel(automation.jobBoard)}
                   </Badge>
                   {retired ? (
                     <Badge variant="destructive">Retired</Badge>

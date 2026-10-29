@@ -39,3 +39,12 @@ describe("PROVIDER_META", () => {
     });
   });
 });
+
+describe("parseEditSourceConfig: jobspy", () => {
+  it("keeps a JobSpy config so editing it keeps its searches", () => {
+    const sc = JSON.stringify({ jobspy: { searchTerms: ["Software Engineer"], hoursOld: 72 } });
+    expect(parseEditSourceConfig(sc)).toEqual({
+      jobspy: { searchTerms: ["Software Engineer"], hoursOld: 72 },
+    });
+  });
+});

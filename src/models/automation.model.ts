@@ -95,6 +95,21 @@ export function isSearchBoard(board: string): board is SearchBoard {
   return (SEARCH_BOARDS as string[]).includes(board);
 }
 
+// Display names, safe for client components (ats/registry.ts is server-only).
+export const AUTOMATION_BOARD_LABELS: Record<AutomationBoard, string> = {
+  greenhouse: "Greenhouse",
+  lever: "Lever",
+  ashby: "Ashby",
+  jobspy: "Indeed (JobSpy)",
+};
+
+// A retired board's raw value is shown as-is.
+export function automationBoardLabel(board: string): string {
+  return Object.hasOwn(AUTOMATION_BOARD_LABELS, board)
+    ? AUTOMATION_BOARD_LABELS[board as AutomationBoard]
+    : board;
+}
+
 // Boards that used to exist and were removed. Their Automation rows stay in
 // the database; the UI marks them retired and only offers pause/delete.
 export const RETIRED_BOARDS = ["jsearch"];

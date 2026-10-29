@@ -1,6 +1,7 @@
 import { APP_CONSTANTS } from "@/lib/constants";
 import type { CreateAutomationInput } from "@/models/automation.schema";
 import type { AtsConfigValue } from "../AtsSearchStep";
+import type { SearchConfigValue } from "../ats-search-step/types";
 
 export type AtsKey = "greenhouse" | "lever" | "ashby";
 
@@ -14,6 +15,21 @@ export const EMPTY_ATS: AtsConfigValue = {
   remoteUsOnly: false,
   topK: APP_CONSTANTS.MAX_JOBS_PER_RUN,
   saveUnanalyzed: true,
+};
+
+export const EMPTY_SEARCH: SearchConfigValue = {
+  searchTerms: [],
+  targetTitles: [],
+  keywords: [],
+  excludeTitles: [],
+  locations: [],
+  strictLocation: false,
+  remoteUsOnly: false,
+  topK: APP_CONSTANTS.MAX_JOBS_PER_RUN,
+  saveUnanalyzed: true,
+  location: APP_CONSTANTS.JOBSPY_DEFAULT_LOCATION,
+  hoursOld: APP_CONSTANTS.JOBSPY_DEFAULT_HOURS_OLD,
+  resultsPerTerm: APP_CONSTANTS.JOBSPY_DEFAULT_RESULTS_PER_TERM,
 };
 
 export const STEPS = [
@@ -36,7 +52,10 @@ export function parseEditSourceConfig(
   if (!sc) return undefined;
   try {
     const parsed = JSON.parse(sc);
-    return parsed?.greenhouse || parsed?.lever || parsed?.ashby
+    return parsed?.greenhouse ||
+      parsed?.lever ||
+      parsed?.ashby ||
+      parsed?.jobspy
       ? parsed
       : undefined;
   } catch {
