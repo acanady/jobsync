@@ -72,7 +72,7 @@ function makeJob(title: string, description = "", extra = {}) {
     company: "Acme",
     location: "Remote",
     description,
-    url: `https://jobs.lever.co/acme/${Math.random()}`,
+    url: `https://jobs.lever.co/acme/${crypto.randomUUID()}`,
     postedDate: "2026-06-01T00:00:00Z",
     ...extra,
   };

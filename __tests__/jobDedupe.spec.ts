@@ -1,5 +1,5 @@
 import { getExistingJobDedupeMap, findExistingJobByUrl } from "@/lib/jobs/jobDedupe";
-import { jobDedupeKey } from "@/lib/scraper/utils";
+import { dedupeJobs, jobDedupeKey } from "@/lib/scraper/utils";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -70,8 +70,22 @@ describe("getExistingJobDedupeMap", () => {
       row({ id: "second", jobUrl: "https://www.ex.com/jobs/1/?utm_source=x" }),
     ]);
     const map = await getExistingJobDedupeMap("user-1");
-    expect(map.size).toBe(1);
+    // Both rows register the same URL and signature keys; each stays "first".
+    expect(new Set([...map.values()].map((ref) => ref.id))).toEqual(new Set(["first"]));
     expect(map.get(jobDedupeKey({ url: "https://ex.com/jobs/1" }))?.id).toBe("first");
+  });
+
+  it("registers the signature too, so an Indeed listing of a saved ATS job is a duplicate", async () => {
+    mockJobs([row({
+      id: "gh", jobUrl: "https://job-boards.greenhouse.io/acme/jobs/1",
+      title: "Software Engineer", company: "Acme", location: "Remote, USA",
+    })]);
+    const map = await getExistingJobDedupeMap("user-1");
+    const listing = {
+      title: "Software Engineer", company: "Acme Inc.", location: "Remote, USA",
+      url: "https://www.indeed.com/viewjob?jk=abc",
+    };
+    expect(dedupeJobs([listing], map)).toEqual([]);
   });
 
   it("does not crash on null title/company/location", async () => {
@@ -102,11 +116,16 @@ describe("add_job Tier 1 URL matching via the dedupe map", () => {
 
   it.each([
     ["different path", "https://job-boards.greenhouse.io/acme/jobs/2"],
-    ["meaningful query differs", "https://job-boards.greenhouse.io/acme/jobs/1?jid=99"],
+    ["different posting id", "https://job-boards.greenhouse.io/acme/jobs/2"],
     ["different host", "https://boards.lever.co/acme/jobs/1"],
   ])("does NOT flag %s as a duplicate", async (_label, url) => {
     const hit = await lookupByUrl(existing, url);
     expect(hit).toBeUndefined();
+  });
+
+  it("does NOT flag a non-ATS URL whose meaningful query differs", async () => {
+    const withQuery = [row({ id: "q", jobUrl: "https://ex.com/jobs?id=1" })];
+    expect(await lookupByUrl(withQuery, "https://ex.com/jobs?id=2")).toBeUndefined();
   });
 
   it("preserves an order-independent query as the same job", async () => {
@@ -179,6 +198,17 @@ describe("findExistingJobByUrl", () => {
     const hit = await findExistingJobByUrl(
       "user-1",
       "https://Www.Ex.com/j/1",
+    );
+
+    expect(hit?.id).toBe("j1");
+  });
+
+  it("falls back to a scan and matches the same Greenhouse posting on another host", async () => {
+    mockJobs([row({ id: "j1", jobUrl: "https://boards.greenhouse.io/acme/jobs/4703011006?gh_jid=4703011006" })]);
+
+    const hit = await findExistingJobByUrl(
+      "user-1",
+      "https://job-boards.greenhouse.io/acme/jobs/4703011006",
     );
 
     expect(hit?.id).toBe("j1");
