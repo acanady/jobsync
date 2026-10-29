@@ -111,6 +111,13 @@ export const APP_CONSTANTS = {
 
   // Shared ATS tuning (applies to every job board provider)
   ATS_MAX_COMPANIES: 25, // per automation
+  JOBSPY_MAX_SEARCH_TERMS: 20, // per automation; jobspy-service's own limit
+  // Defaults the spike settled on: daily runs see each new posting once.
+  JOBSPY_DEFAULT_LOCATION: "United States",
+  JOBSPY_DEFAULT_HOURS_OLD: 26,
+  JOBSPY_DEFAULT_RESULTS_PER_TERM: 100,
+  // jobspy-service stops starting searches at 4 minutes; allow it to finish.
+  JOBSPY_REQUEST_TIMEOUT_MS: 6 * 60 * 1000,
   ATS_LISTING_CAP: 50, // safety ceiling applied after the relevance floor
   ATS_FLOOR_MIN_TITLE_HITS: 1,
   ATS_FLOOR_MIN_KEYWORD_HITS: 1,

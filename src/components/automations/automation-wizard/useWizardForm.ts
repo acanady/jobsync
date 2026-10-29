@@ -100,7 +100,9 @@ export function useWizardForm({
     }
   };
 
-  const atsKey: AtsKey = formValues.jobBoard;
+  // The wizard's board picker offers company boards only, so the form never
+  // holds a search board here.
+  const atsKey = formValues.jobBoard as AtsKey;
   const atsConfig: AtsConfigValue =
     formValues.sourceConfig?.[atsKey] ?? EMPTY_ATS;
 

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { AlertTriangle, Clock, FileText, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { AutomationWithResume } from "@/models/automation.model";
+import { isSearchBoard, type AutomationWithResume } from "@/models/automation.model";
 import { AutomationSearchConfig } from "./AutomationSearchConfig";
 
 interface AutomationSummaryCardProps {
@@ -108,11 +108,13 @@ export function AutomationSummaryCard({
           </div>
         </div>
 
-        <AutomationSearchConfig
-          sourceConfig={automation.sourceConfig}
-          jobBoard={automation.jobBoard}
-          retired={retired}
-        />
+        {!isSearchBoard(automation.jobBoard) && (
+          <AutomationSearchConfig
+            sourceConfig={automation.sourceConfig}
+            jobBoard={automation.jobBoard}
+            retired={retired}
+          />
+        )}
       </CardContent>
     </Card>
   );

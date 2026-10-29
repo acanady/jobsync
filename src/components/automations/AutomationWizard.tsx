@@ -117,7 +117,7 @@ export function AutomationWizard({
 
               <div className={step === 1 ? "space-y-4" : "hidden"}>
                 <AtsSearchStep
-                  provider={formValues.jobBoard}
+                  provider={atsKey}
                   value={atsConfig}
                   onChange={(next) =>
                     form.setValue(

@@ -122,3 +122,53 @@ describe("CreateAutomationSchema conditional validation", () => {
     expect(result.success).toBe(true);
   });
 });
+
+describe("CreateAutomationSchema: jobspy (search) board", () => {
+  const jobspy = (cfg: Record<string, unknown>) =>
+    CreateAutomationSchema.safeParse({ ...base, jobBoard: "jobspy", sourceConfig: { jobspy: cfg } });
+
+  it("needs no companies: search terms are enough", () => {
+    expect(jobspy({ searchTerms: ["Software Engineer"] }).success).toBe(true);
+  });
+
+  it("accepts target titles alone, which become the searches", () => {
+    expect(jobspy({ targetTitles: ["Software Engineer"], excludeTitles: ["Senior"], remoteUsOnly: true }).success)
+      .toBe(true);
+  });
+
+  it("rejects a search with neither search terms nor target titles", () => {
+    const result = jobspy({ keywords: ["Python"] });
+    expect(result.success).toBe(false);
+    expect(result.error!.issues[0].path).toEqual(["sourceConfig", "jobspy", "searchTerms"]);
+  });
+
+  it("rejects a missing jobspy config", () => {
+    expect(CreateAutomationSchema.safeParse({ ...base, jobBoard: "jobspy" }).success).toBe(false);
+  });
+
+  it("caps searches at 20, whether from terms or titles", () => {
+    const many = Array.from({ length: 21 }, (_, i) => `Title ${i}`);
+    expect(jobspy({ searchTerms: many }).success).toBe(false);
+    expect(jobspy({ targetTitles: many }).success).toBe(false);
+    expect(jobspy({ searchTerms: many.slice(0, 20) }).success).toBe(true);
+  });
+
+  it.each([
+    ["a non-Indeed site", { sites: ["linkedin"] }],
+    ["hoursOld 0", { hoursOld: 0 }],
+    ["hoursOld over 30 days", { hoursOld: 721 }],
+    ["resultsPerTerm over 200", { resultsPerTerm: 201 }],
+    ["a blank search term", { searchTerms: ["  "] }],
+  ])("rejects %s", (_label, extra) => {
+    expect(jobspy({ searchTerms: ["Software Engineer"], ...extra }).success).toBe(false);
+  });
+
+  it("still requires companies for a company board", () => {
+    const result = CreateAutomationSchema.safeParse({
+      ...base,
+      jobBoard: "lever",
+      sourceConfig: { lever: { companies: [] }, jobspy: { searchTerms: ["x"] } },
+    });
+    expect(result.success).toBe(false);
+  });
+});

@@ -14,7 +14,7 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 vi.mock("@/lib/scraper/ats/registry", () => ({
-  ATS_PROVIDERS: { greenhouse: { label: "Greenhouse" } },
+  boardLabel: (board: string) => ({ greenhouse: "Greenhouse" })[board] ?? board,
 }));
 vi.mock("@/lib/telemetry", () => ({ log: { error: vi.fn() } }));
 

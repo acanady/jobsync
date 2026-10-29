@@ -11,7 +11,7 @@ import {
 import { PROVIDER_VERIFIERS } from "@/lib/ai/provider-registry.server";
 import { getOllamaBaseUrl } from "@/actions/apiKey.actions";
 import { AiProvider } from "@/models/ai.model";
-import { isRetiredBoard, type JobBoard } from "@/models/automation.model";
+import { isRetiredBoard, type AutomationBoard } from "@/models/automation.model";
 import { APP_CONSTANTS } from "@/lib/constants";
 import { log } from "@/lib/telemetry";
 
@@ -128,7 +128,7 @@ export async function POST(
       id: automation.id,
       userId: automation.userId,
       name: automation.name,
-      jobBoard: automation.jobBoard as JobBoard,
+      jobBoard: automation.jobBoard as AutomationBoard,
       keywords: automation.keywords,
       location: automation.location,
       sourceConfig: automation.sourceConfig,
