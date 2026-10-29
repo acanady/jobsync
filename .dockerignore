@@ -16,3 +16,6 @@ docs
 coverage
 __tests__
 e2e
+
+# Built separately as the jobspy sidecar (docker-compose.override.yml)
+jobspy-service
