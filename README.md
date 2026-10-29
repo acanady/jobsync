@@ -6,6 +6,7 @@
 > - **Automation filters** — exclude titles containing words like *Senior* or *Staff*, and a **Remote (US) only** switch
 > - **Bulk Dismiss / Delete** on the Jobs list (dismissed jobs stay out of future automation runs)
 > - **AI resume tailoring** — the assistant tailors a resume to the job you're viewing, or applies edits you dictate, and shows every change before → after for you to approve; each AI match offers to tailor afterwards
+> - **Indeed search via [JobSpy](https://github.com/speedyapply/JobSpy)** — a new automation board that searches Indeed for your target titles across all companies, then filters, dedupes (including against jobs your Greenhouse/Lever/Ashby automations already found) and AI-matches them like a company board. It runs in a small `jobspy` sidecar container that Compose builds and starts alongside the app
 >
 > There is no prebuilt image for this fork: `docker compose` **builds it from source** on first run (~5 minutes). Use the [Quick Start](#quick-start) below — not upstream's install or update commands.
 >
