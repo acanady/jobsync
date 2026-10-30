@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { EyeOff, Trash, X } from "lucide-react";
+import { EyeOff, Sparkles, Trash, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteAlertDialog } from "@/components/DeleteAlertDialog";
 
@@ -11,6 +11,9 @@ type BulkActionsBarProps = {
   onDismiss: () => void;
   onDelete: () => void;
   onClear: () => void;
+  onMatch: () => void;
+  // Why AI matching can't start now, if it can't.
+  matchDisabledReason?: string;
 };
 
 const plural = (n: number) => `${n} job${n === 1 ? "" : "s"}`;
@@ -21,6 +24,8 @@ export function BulkActionsBar({
   onDismiss,
   onDelete,
   onClear,
+  onMatch,
+  matchDisabledReason,
 }: BulkActionsBarProps) {
   const [confirm, setConfirm] = useState<"dismiss" | "delete" | null>(null);
   const skipped = selectedCount - dismissableCount;
@@ -33,6 +38,19 @@ export function BulkActionsBar({
       >
         <span className="font-medium">{selectedCount} selected</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!!matchDisabledReason}
+            title={
+              matchDisabledReason ??
+              "Run the AI match on these jobs, one after another"
+            }
+            onClick={onMatch}
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            AI match
+          </Button>
           <Button
             size="sm"
             variant="outline"

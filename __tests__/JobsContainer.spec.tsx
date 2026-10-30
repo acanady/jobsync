@@ -9,6 +9,7 @@ import {
   deleteJobsByIds,
   dismissJobsByIds,
   updateJobStatus,
+  getBatchMatchStatus,
 } from "@/actions/job.actions";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { EMPTY_JOB_FACETS } from "@/lib/jobs/jobFacets";
@@ -51,6 +52,11 @@ vi.mock("@/actions/job.actions", () => ({
   deleteJobsByIds: vi.fn(),
   dismissJobsByIds: vi.fn(),
   updateJobStatus: vi.fn(),
+  getBatchMatchStatus: vi.fn(async () => ({ success: true, data: null })),
+  getBatchMatchSetup: vi.fn(),
+  startBatchMatch: vi.fn(),
+  cancelBatchMatch: vi.fn(),
+  clearBatchMatch: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -248,6 +254,30 @@ describe("JobsContainer Search Functionality", () => {
       />,
     );
   };
+
+  describe("Batch AI matching", () => {
+    it("writes a score that landed into its row without reloading the list", async () => {
+      (getJobsList as any).mockResolvedValue({ success: true, data: mockJobs, total: 2 });
+      (getBatchMatchStatus as any).mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: "b1",
+          resumeId: "r",
+          resumeTitle: "Main resume",
+          status: "completed",
+          startedAt: "2026-10-30T12:00:00Z",
+          cancelRequested: false,
+          items: [{ jobId: "1", title: "Full Stack Developer", company: "Amazon", status: "matched", matchScore: 77 }],
+        },
+      });
+
+      renderComponent();
+
+      expect(await screen.findByText("77%")).toBeInTheDocument();
+      expect(screen.getByText("AI matching finished")).toBeInTheDocument();
+      expect(getJobsList).toHaveBeenCalledTimes(1);
+    });
+  });
 
   describe("Search Input", () => {
     it("should render search input with placeholder", async () => {

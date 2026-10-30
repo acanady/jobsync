@@ -30,6 +30,10 @@ import { useJobsList } from "./jobs-container/useJobsList";
 import { downloadJobsList } from "./jobs-container/downloadJobsCsv";
 import { JobsToolbar } from "./jobs-container/JobsToolbar";
 import { BulkActionsBar } from "./jobs-container/BulkActionsBar";
+import { useBatchMatch } from "./batch-match/useBatchMatch";
+import { BatchMatchDialog } from "./batch-match/BatchMatchDialog";
+import { BatchMatchProgress } from "./batch-match/BatchMatchProgress";
+import { BATCH_MATCH_MAX_JOBS } from "@/models/batchMatch.model";
 import { EMPTY_JOB_FACETS, hasJobFacets } from "@/lib/jobs/jobFacets";
 import { Button } from "../ui/button";
 
@@ -88,6 +92,7 @@ function JobsContainer({
     loadingMore,
     loadJobs,
     reloadJobs,
+    patchJobScores,
     sentinelRef,
   } = useJobsList({
     companyFilter,
@@ -166,6 +171,20 @@ function JobsContainer({
       "dismissed",
     );
 
+  const batch = useBatchMatch(patchJobScores);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const matchDisabledReason = batch.running
+    ? "AI matching is already running — wait for it or cancel it"
+    : selectedIds.size > BATCH_MATCH_MAX_JOBS
+      ? `Select at most ${BATCH_MATCH_MAX_JOBS} jobs to AI match`
+      : undefined;
+
+  const onStartBatch = async (resumeId: string, skipScored: boolean) => {
+    const ok = await batch.start([...selectedIds], resumeId, skipScored);
+    if (ok) setSelectedIds(new Set());
+    return ok;
+  };
+
   const onDismissJob = (jobId: string) =>
     runBulk(dismissJobsByIds, [jobId], "dismissed");
 
@@ -239,6 +258,13 @@ function JobsContainer({
           addJobInitialOpen={queryParams.get("add-job") === "true"}
         />
         <CardContent>
+          {batch.state && (
+            <BatchMatchProgress
+              state={batch.state}
+              onCancel={batch.cancel}
+              onClear={batch.clear}
+            />
+          )}
           {selectedIds.size > 0 && (
             <BulkActionsBar
               selectedCount={selectedIds.size}
@@ -246,6 +272,8 @@ function JobsContainer({
               onDismiss={onBulkDismiss}
               onDelete={onBulkDelete}
               onClear={() => setSelectedIds(new Set())}
+              onMatch={() => setBatchDialogOpen(true)}
+              matchDisabledReason={matchDisabledReason}
             />
           )}
           {initialLoading && <Loading />}
@@ -303,6 +331,12 @@ function JobsContainer({
         </CardContent>
         <CardFooter></CardFooter>
       </Card>
+      <BatchMatchDialog
+        open={batchDialogOpen}
+        onOpenChange={setBatchDialogOpen}
+        jobIds={[...selectedIds]}
+        onStart={onStartBatch}
+      />
       <NoteDialog
         open={noteDialogOpen}
         onOpenChange={setNoteDialogOpen}
