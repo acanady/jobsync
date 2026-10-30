@@ -2,28 +2,11 @@
 
 import db from "@/lib/db";
 import { requireUser } from "../shared";
-import { generateText } from "ai";
-import { startAiCall } from "@/lib/aiUsage/tracker";
-import {
-  getModel,
-  parseJobMatch,
-  JOB_MATCH_SYSTEM_PROMPT,
-  buildJobMatchPrompt,
-  preprocessResume,
-  preprocessJob,
-} from "@/lib/ai";
-import { getResumeById } from "@/actions/profile.actions";
-import { getJobDetails } from "@/actions/job.actions";
-import { defaultUserSettings } from "@/models/userSettings.model";
 import { automationLogger } from "@/lib/automation-logger";
-import { APP_CONSTANTS } from "@/lib/constants";
 import {
-  genAiRequestAttrs,
-  genAiResponseAttrs,
-  inputSizeAttrs,
-  SURFACES,
-  withSpan,
-} from "@/lib/telemetry";
+  matchStoredJob,
+  storedMatchFailureMessage,
+} from "@/lib/ai/jobMatch/matchStoredJob";
 import { formatError } from "./shared";
 
 // Runs an on-demand LLM match for an un-analyzed discovered job using the
@@ -59,122 +42,17 @@ export async function analyzeDiscoveredJob(jobId: string): Promise<{
       return { success: false, message: "Automation resume is missing" };
     }
 
-    const userSettings = await db.userSettings.findUnique({
-      where: { userId: user.id },
-    });
-    const ai = userSettings
-      ? {
-          ...defaultUserSettings.ai,
-          ...(JSON.parse(userSettings.settings).ai ?? {}),
-        }
-      : defaultUserSettings.ai;
-
-    const [{ data: resume }, { job: jobDetails }] = await Promise.all([
-      getResumeById(resumeId),
-      getJobDetails(jobId),
-    ]);
-
-    const [resumePre, jobPre] = await Promise.all([
-      preprocessResume(resume),
-      preprocessJob(jobDetails),
-    ]);
-
-    if (!resumePre.success || !jobPre.success) {
-      return { success: false, message: "Failed to prepare match inputs" };
-    }
-
-    const model = await getModel(ai.provider, ai.model || "qwen3.5:9b", user.id);
-
-    const promptText = buildJobMatchPrompt(
-      resumePre.data.normalizedText,
-      jobPre.data.normalizedText,
-    );
-
-    const result = await withSpan(
-      "automation.analyze",
-      {
-        ...genAiRequestAttrs({
-          provider: ai.provider,
-          model: ai.model || "qwen3.5:9b",
-          temperature: 0.3,
-          numCtx: APP_CONSTANTS.AI_OLLAMA_NUM_CTX,
-          surface: SURFACES.JOB_MATCH,
-          system: JOB_MATCH_SYSTEM_PROMPT,
-          prompt: promptText,
-        }),
-        ...inputSizeAttrs({
-          resumeChars: resumePre.data.normalizedText.length,
-          jobChars: jobPre.data.normalizedText.length,
-        }),
-        "jobsync.user_id": user.id,
-        "jobsync.job_id": jobId,
-      },
-      async (span) => {
-        // The Analyze button on a discovered job counts as Automations.
-        const tracker = startAiCall({
-          userId: user.id,
-          feature: "automations",
-          provider: ai.provider,
-          model: ai.model || "qwen3.5:9b",
-        });
-        let generated;
-        try {
-          generated = await generateText({
-            model,
-            system: JOB_MATCH_SYSTEM_PROMPT,
-            prompt: promptText,
-            temperature: 0.3,
-          });
-        } catch (error) {
-          void tracker.finish({ error });
-          throw error;
-        }
-        void tracker.finish({
-          usage: generated.totalUsage,
-          finishReason: generated.finishReason,
-        });
-        span.setAttrs(
-          genAiResponseAttrs({
-            usage: generated.totalUsage,
-            finishReason: generated.finishReason,
-            text: generated.text,
-          }),
-        );
-        return generated;
-      },
-    );
-
-    const { scores, body } = parseJobMatch(result.text);
-    if (!scores) {
-      return { success: false, message: "AI did not return a match score" };
-    }
-
-    let previous: Record<string, unknown> = {};
-    try {
-      previous = JSON.parse(job.matchData ?? "{}");
-    } catch {
-      previous = {};
-    }
-
-    const matchData = JSON.stringify({
-      ...previous,
-      matchScore: scores.matchScore,
-      recommendation: scores.recommendation,
-      body,
+    // The Analyze button on a discovered job counts as Automations.
+    const outcome = await matchStoredJob({
+      userId: user.id,
+      jobId,
       resumeId,
-      resumeTitle: resume.title,
-      matchedAt: new Date().toISOString(),
-      provider: ai.provider,
-      model: ai.model,
-      analyzed: true,
+      feature: "automations",
     });
-
-    await db.job.update({
-      where: { id: jobId, userId: user.id },
-      data: { matchScore: scores.matchScore, matchData },
-    });
-
-    return { success: true, matchScore: scores.matchScore };
+    if (outcome.status !== "ok") {
+      return { success: false, message: storedMatchFailureMessage(outcome) };
+    }
+    return { success: true, matchScore: outcome.matchScore };
   } catch (error) {
     return formatError(error, "Failed to analyze discovered job");
   }
