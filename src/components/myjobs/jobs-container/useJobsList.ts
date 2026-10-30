@@ -113,6 +113,16 @@ export function useJobsList({
     ],
   );
 
+  // Writes scores that landed server-side into the loaded rows, keeping the
+  // scroll position a reload would reset.
+  const patchJobScores = useCallback((scores: Map<string, number>) => {
+    setJobs((prev) =>
+      prev.map((j) =>
+        scores.has(j.id) ? { ...j, matchScore: scores.get(j.id)! } : j,
+      ),
+    );
+  }, []);
+
   const reloadJobs = useCallback(async () => {
     await loadJobs(1, searchTerm || undefined);
   }, [loadJobs, searchTerm]);
@@ -202,6 +212,7 @@ export function useJobsList({
     loadingMore,
     loadJobs,
     reloadJobs,
+    patchJobScores,
     sentinelRef,
   };
 }

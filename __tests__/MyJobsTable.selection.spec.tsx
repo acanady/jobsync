@@ -109,6 +109,7 @@ describe("BulkActionsBar", () => {
         onDismiss={vi.fn()}
         onDelete={onDelete}
         onClear={vi.fn()}
+        onMatch={vi.fn()}
       />,
     );
     expect(screen.getByText("3 selected")).toBeInTheDocument();
@@ -128,6 +129,7 @@ describe("BulkActionsBar", () => {
         onDismiss={onDismiss}
         onDelete={vi.fn()}
         onClear={vi.fn()}
+        onMatch={vi.fn()}
       />,
     );
     await user.click(screen.getByRole("button", { name: /dismiss/i }));
@@ -145,8 +147,40 @@ describe("BulkActionsBar", () => {
         onDismiss={vi.fn()}
         onDelete={vi.fn()}
         onClear={vi.fn()}
+        onMatch={vi.fn()}
       />,
     );
     expect(screen.getByRole("button", { name: /dismiss/i })).toBeDisabled();
+  });
+
+  it("opens AI matching, or says why it can't", async () => {
+    const onMatch = vi.fn();
+    const { rerender } = render(
+      <BulkActionsBar
+        selectedCount={2}
+        dismissableCount={0}
+        onDismiss={vi.fn()}
+        onDelete={vi.fn()}
+        onClear={vi.fn()}
+        onMatch={onMatch}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /ai match/i }));
+    expect(onMatch).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <BulkActionsBar
+        selectedCount={2}
+        dismissableCount={0}
+        onDismiss={vi.fn()}
+        onDelete={vi.fn()}
+        onClear={vi.fn()}
+        onMatch={onMatch}
+        matchDisabledReason="AI matching is already running"
+      />,
+    );
+    const button = screen.getByRole("button", { name: /ai match/i });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("title", "AI matching is already running");
   });
 });
