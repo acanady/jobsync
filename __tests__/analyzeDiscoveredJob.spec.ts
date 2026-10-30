@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 
 vi.mock("@/lib/db", () => ({ default: { job: { findFirst: vi.fn() } } }));
 vi.mock("@/actions/shared", () => ({ requireUser: vi.fn(async () => ({ id: "user-1" })) }));
-const isRunning = vi.fn(() => false);
+const isRunning = vi.fn((_id: string) => false);
 vi.mock("@/lib/automation-logger", () => ({
   automationLogger: { isRunning: (id: string) => isRunning(id) },
 }));

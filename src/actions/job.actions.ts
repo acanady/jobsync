@@ -20,6 +20,14 @@ export {
 export { updateJobStatus, saveJobMatchResult } from "./job/status";
 
 export {
+  getBatchMatchSetup,
+  startBatchMatch,
+  getBatchMatchStatus,
+  cancelBatchMatch,
+  clearBatchMatch,
+} from "./job/batchMatch";
+
+export {
   getStatusList,
   getJobSourceList,
   createLocation,
