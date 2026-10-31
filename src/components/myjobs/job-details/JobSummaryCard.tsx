@@ -11,6 +11,7 @@ import { DownloadFileButton } from "@/components/profile/DownloadFileButton";
 import { BADGE_COLORS, getJobStatusBadgeColor } from "@/lib/badge-colors";
 import { cn, formatUrl } from "@/lib/utils";
 import type { JobMatchData } from "@/models/ai.schemas";
+import { AiSuggestedSalary } from "./AiSuggestedSalary";
 import {
   JobResponse,
   JobStatus,
@@ -29,6 +30,9 @@ export function JobSummaryCard({
   currentStatus,
   matchData,
 }: JobSummaryCardProps) {
+  // Same test as the AI Match cell: a pre-rank-only score is not a match.
+  const aiMatched = job.matchScore != null && matchData?.analyzed !== false;
+
   const expired =
     job.dueDate &&
     new Date() > new Date(job.dueDate) &&
@@ -79,9 +83,9 @@ export function JobSummaryCard({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">AI Match</p>
-            {job.matchScore != null && matchData?.analyzed !== false ? (
+            {aiMatched ? (
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <CircularScore score={job.matchScore} size="sm" />
+                <CircularScore score={job.matchScore!} size="sm" />
                 {matchData?.recommendation && (
                   <Badge variant="outline" className="capitalize">
                     {matchData.recommendation}
@@ -133,6 +137,8 @@ export function JobSummaryCard({
             </div>
           </div>
         </div>
+
+        {aiMatched && matchData && <AiSuggestedSalary matchData={matchData} />}
 
         {(job.jobUrl || (job.tags && job.tags.length > 0)) && (
           <div className="mt-6 pt-4 border-t flex flex-wrap items-center gap-4">
