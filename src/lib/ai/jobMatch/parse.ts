@@ -4,6 +4,7 @@ import type {
   JobMatchScores,
 } from "@/models/ai.schemas";
 import { stripThinking } from "@/lib/ai/stripThinking";
+import { parseSalaryLine, SALARY_LINE_RE } from "@/lib/ai/jobMatch/salary";
 
 // Isomorphic parser shared by the client stream util and the server-side
 // automation runner. No `server-only`, no `fetch` — pure text -> result.
@@ -39,7 +40,11 @@ export function parseJobMatch(raw: string): JobMatchResult {
   let body = match
     ? text.replace(match[0], "")
     : text.replace(/^\s*SCORES:[^\n]*(\n|$)/i, "");
+  // The salary line follows the scores line. It is hidden whether or not it
+  // parses: a malformed or half-streamed one is noise in the write-up.
+  const salary = parseSalaryLine(body);
+  body = body.replace(/^\s+/, "").replace(SALARY_LINE_RE, "");
   body = body.replace(/^\s+/, "");
 
-  return { scores, body };
+  return salary ? { scores, salary, body } : { scores, body };
 }

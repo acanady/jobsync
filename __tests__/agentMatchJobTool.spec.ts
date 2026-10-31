@@ -309,4 +309,14 @@ describe("match_job agent tool", () => {
     expect(result.title).toBe("Senior Engineer Resume");
     expect(streamText).not.toHaveBeenCalled();
   });
+
+  it("saves the suggested salary with the match", async () => {
+    streamText.mockReturnValue(
+      textStreamOf(["SCORES: match=72 recommendation=good\nSALARY: low=135000 high=150000 currency=USD period=year basis=posted\n\n## Summary\n\nOk."]),
+    );
+    const result = await execute(buildMatchJobTool(ctx()), {});
+    const data = JSON.parse(save.mock.calls[0][2]);
+    expect(data.suggestedSalary).toEqual({ low: 135000, high: 150000, currency: "USD", period: "year", basis: "posted" });
+    expect(result.body).not.toContain("SALARY:");
+  });
 });

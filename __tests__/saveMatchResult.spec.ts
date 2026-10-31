@@ -260,4 +260,19 @@ describe("handleSaveMatchResult", () => {
     const data = (prisma.job.update as any).mock.calls[0][0].data;
     expect(JSON.parse(data.matchData).descriptionCompleteness).toBeUndefined();
   });
+
+  it("stores a suggested salary when the agent includes the line, and none otherwise", async () => {
+    await handleSaveMatchResult(
+      { jobId: "job-1", matchText: "SCORES: match=78 recommendation=good\nSALARY: low=135000 high=150000 currency=USD period=year basis=posted\n\nBody" } as any,
+      "user-1",
+      "token",
+    );
+    const withSalary = JSON.parse((prisma.job.update as any).mock.calls[0][0].data.matchData);
+    expect(withSalary.suggestedSalary).toMatchObject({ low: 135000, basis: "posted" });
+    expect(withSalary.body).toBe("Body");
+
+    await handleSaveMatchResult({ jobId: "job-1", matchText: validMatchText } as any, "user-1", "token");
+    const without = JSON.parse((prisma.job.update as any).mock.calls[1][0].data.matchData);
+    expect(without).not.toHaveProperty("suggestedSalary");
+  });
 });

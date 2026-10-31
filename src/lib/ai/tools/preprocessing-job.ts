@@ -47,6 +47,7 @@ export const convertJobToText = (job: JobResponse): Promise<string> => {
       Company: { label: companyName },
       Location,
       workplaceType,
+      salaryRange,
     } = job;
 
     const workplaceTypeLine =
@@ -54,11 +55,13 @@ export const convertJobToText = (job: JobResponse): Promise<string> => {
         ? `Workplace Type: ${WORKPLACE_TYPES[workplaceType as keyof typeof WORKPLACE_TYPES]}\n`
         : "";
     const locationLine = Location ? `Location: ${Location.label}\n` : "";
+    // Indeed (JobSpy) jobs carry their pay here rather than in the description.
+    const salaryLine = salaryRange ? `Salary Range: ${salaryRange}\n` : "";
 
     const jobText = `
 Job Title: ${jobTitle}
 Company: ${companyName}
-${locationLine}${workplaceTypeLine}Description: ${removeHtmlTags(description)}
+${locationLine}${workplaceTypeLine}${salaryLine}Description: ${removeHtmlTags(description)}
     `;
 
     return resolve(jobText);

@@ -165,7 +165,7 @@ export async function matchStoredJob(
       },
     );
 
-    const { scores, body } = parseJobMatch(result.text);
+    const { scores, salary, body } = parseJobMatch(result.text);
     if (!scores) return { status: "no_score" };
 
     let previous: Record<string, unknown> = {};
@@ -181,6 +181,8 @@ export async function matchStoredJob(
       matchScore: scores.matchScore,
       recommendation: scores.recommendation,
       body,
+      // Undefined drops a suggestion left by an earlier match.
+      suggestedSalary: salary,
       resumeId,
       resumeTitle: resume.title,
       matchedAt: new Date().toISOString(),

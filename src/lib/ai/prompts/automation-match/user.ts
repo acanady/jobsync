@@ -22,5 +22,5 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}
 
-Output the scores line first, then a 2-3 sentence Summary. Be specific and reference actual content from both documents.`;
+Output the scores line first and the salary line second, then a 2-3 sentence Summary. Be specific and reference actual content from both documents.`;
 }
