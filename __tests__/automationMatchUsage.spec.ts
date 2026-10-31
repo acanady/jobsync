@@ -1,3 +1,8 @@
+const parsed = vi.hoisted(() => ({
+  scores: { matchScore: 80, recommendation: "good" },
+  body: "",
+  salary: undefined as unknown,
+}));
 const generateText = vi.fn();
 vi.mock("ai", async (importOriginal) => {
   const actual = await importOriginal<typeof import("ai")>();
@@ -5,7 +10,7 @@ vi.mock("ai", async (importOriginal) => {
 });
 vi.mock("@/lib/ai", () => ({
   getModel: vi.fn(async () => ({ id: "m" })),
-  parseJobMatch: () => ({ scores: { matchScore: 80, recommendation: "good" }, body: "" }),
+  parseJobMatch: () => ({ ...parsed }),
   AUTOMATION_JOB_MATCH_SYSTEM_PROMPT: "SYS",
   buildAutomationJobMatchPrompt: () => "PROMPT",
   removeHtmlTags: (s: string) => s,
@@ -49,5 +54,13 @@ describe("automation match usage", () => {
     generateText.mockRejectedValue(Object.assign(new Error("aborted"), { name: "AbortError" }));
     await run(controller.signal);
     expect(finish.mock.calls[0][0].abortedBy).toBe(controller.signal);
+  });
+
+  it("passes the parsed salary through with the match data", async () => {
+    generateText.mockResolvedValue({ text: "x", totalUsage: {}, finishReason: "stop" });
+    parsed.salary = { low: 1, high: 2, currency: "USD", period: "year", basis: "estimated" };
+    const res = await run();
+    expect(res.data).toMatchObject({ suggestedSalary: parsed.salary });
+    parsed.salary = undefined;
   });
 });

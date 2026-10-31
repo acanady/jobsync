@@ -20,6 +20,8 @@ export type ResumeReviewData = ResumeScores & {
   reviewedAt?: string;
   provider?: string;
   model?: string;
+  // Absent on matches made before it existed, or when the AI gave none.
+  suggestedSalary?: SuggestedSalary;
   // Which surface produced it. Optional: rows written before this existed
   // simply do not have it, and ReviewDetails ignores it.
   surface?: string;
@@ -41,9 +43,21 @@ export type JobMatchScores = {
   recommendation: JobMatchRecommendation;
 };
 
-// Parsed stream result (scores + markdown body).
+// The pay range the AI suggests the candidate target for a job. "posted"
+// means it sits inside a range the posting states; "estimated" means the
+// posting gave none and the model estimated one.
+export type SuggestedSalary = {
+  low: number;
+  high: number;
+  currency: string;
+  period: "year" | "hour";
+  basis: "posted" | "estimated";
+};
+
+// Parsed stream result (scores + salary + markdown body).
 export type JobMatchResult = {
   scores?: JobMatchScores;
+  salary?: SuggestedSalary;
   body: string;
 };
 
@@ -64,6 +78,8 @@ export type JobMatchData = JobMatchScores & {
   matchedAt?: string;
   provider?: string;
   model?: string;
+  // Absent on matches made before it existed, or when the AI gave none.
+  suggestedSalary?: SuggestedSalary;
   // Which surface produced it. Optional: rows written before this existed
   // simply do not have it, and MatchDetails ignores it.
   surface?: string;

@@ -2,6 +2,7 @@ import { APP_CONSTANTS } from "@/lib/constants";
 import { getDefaultResumeForUser } from "@/lib/jobs/getDefaultResumeForUser";
 import { preprocessResume } from "@/lib/ai/tools/preprocessing";
 import type { DescriptionCompleteness } from "@/models/job.model";
+import { SALARY_LINE_SPEC } from "@/lib/ai/jobMatch/salary";
 
 export function buildMatchDirective(
   jobId: string,
@@ -39,7 +40,12 @@ export function buildMatchDirective(
     `- Produce, in this exact order:\n` +
     `    1. A single first line, exactly:\n` +
     `       SCORES: match=<0-100> recommendation=<strong|good|partial|weak>\n` +
-    `    2. A markdown body with these four sections, each at least a few\n` +
+    `    2. A second line suggesting the pay range the candidate should target:\n` +
+    `       ${SALARY_LINE_SPEC}\n` +
+    `       basis=posted when the job description states pay (pick a target\n` +
+    `       inside that range by fit); otherwise basis=estimated for this role,\n` +
+    `       seniority and location. Whole numbers only, e.g. low=135000.\n` +
+    `    3. A markdown body with these four sections, each at least a few\n` +
     `       sentences of specific, evidence-based analysis (cite concrete\n` +
     `       skills, titles, and years from the resume and job description):\n` +
     `       ## Overall Fit\n` +
@@ -47,7 +53,7 @@ export function buildMatchDirective(
     `       ## Gaps / Risks\n` +
     `       ## Recommendation\n` +
     `- Then call save_match_result with:\n` +
-    `    { "jobId": "${jobId}", "resumeId": "${resumeId}", "matchText": "<the full SCORES line + markdown body>" }`
+    `    { "jobId": "${jobId}", "resumeId": "${resumeId}", "matchText": "<the full SCORES line + SALARY line + markdown body>" }`
   );
 }
 

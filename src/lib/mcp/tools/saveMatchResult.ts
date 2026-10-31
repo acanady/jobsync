@@ -73,6 +73,7 @@ export async function handleSaveMatchResult(
     matchScore: parsed.scores.matchScore,
     recommendation: parsed.scores.recommendation,
     body: parsed.body,
+    suggestedSalary: parsed.salary,
     resumeId: resume?.id,
     resumeTitle: resume?.title,
     matchedAt: new Date().toISOString(),

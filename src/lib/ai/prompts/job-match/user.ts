@@ -22,5 +22,5 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}
 
-Output the scores line first, then the markdown analysis with the required sections. Be specific and reference actual content from both documents.`;
+Output the scores line first and the salary line second, then the markdown analysis with the required sections. Be specific and reference actual content from both documents.`;
 }

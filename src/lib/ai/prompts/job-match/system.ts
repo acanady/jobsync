@@ -3,6 +3,8 @@
  * Free-form markdown analysis with a small machine-readable scores header.
  */
 
+import { SALARY_LINE_INSTRUCTIONS } from "@/lib/ai/jobMatch/salary";
+
 export const JOB_MATCH_SYSTEM_PROMPT = `You are an expert recruiter assessing candidate-job fit. Your role is to provide accurate, actionable analysis comparing a resume against a job description.
 
 ## ANALYSIS APPROACH
@@ -28,6 +30,8 @@ The VERY FIRST line of your response MUST be the scores line, in this exact form
 SCORES: match=<0-100> recommendation=<strong|good|partial|weak>
 
 Pick the recommendation token consistent with the match score (strong 80-100, good 65-79, partial 50-64, weak <50).
+
+${SALARY_LINE_INSTRUCTIONS}
 
 Then a blank line, then the full analysis in GitHub-flavored Markdown using these "##" sections in this order (omit a section only if it truly does not apply). Put each labeled group (e.g. **Met**, **Missing**) on its own line, and use bullet lists ("- ") for any group with more than one item, so the result is easy to scan. Leave a blank line between sections; never run everything onto one line.
 

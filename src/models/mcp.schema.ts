@@ -101,7 +101,7 @@ export const McpSaveMatchResultInputShape = {
       "The id of the resume this match was scored against, exactly as given in the add_job directive. Omit only if the directive had none.",
     ),
   matchText: z.string().min(20).describe(
-    "Your full match analysis: a leading 'SCORES: match=<0-100> recommendation=<strong|good|partial|weak>' line, then a markdown body.",
+    "Your full match analysis: a leading 'SCORES: match=<0-100> recommendation=<strong|good|partial|weak>' line, an optional 'SALARY: low=<number> high=<number> currency=<ISO code> period=<year|hour> basis=<posted|estimated>' line, then a markdown body.",
   ),
 };
 

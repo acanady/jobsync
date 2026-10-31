@@ -111,7 +111,7 @@ ${removeHtmlTags(job.description)}
       },
     );
 
-    const { scores, body } = parseJobMatch(result.text);
+    const { scores, salary, body } = parseJobMatch(result.text);
     if (!scores) {
       return { success: false, score: 0, error: "No match data returned" };
     }
@@ -123,6 +123,7 @@ ${removeHtmlTags(job.description)}
         matchScore: scores.matchScore,
         recommendation: scores.recommendation,
         body,
+        suggestedSalary: salary,
       },
     };
   } catch (error) {

@@ -130,7 +130,7 @@ export function buildMatchJobTool(ctx: MatchJobContext) {
         };
       }
 
-      const { scores, body } = parseJobMatch(generation.text);
+      const { scores, salary, body } = parseJobMatch(generation.text);
       // matchData is overwrite-only with no history, so an unscored or
       // half-finished generation must not be written.
       if (!scores) {
@@ -144,6 +144,7 @@ export function buildMatchJobTool(ctx: MatchJobContext) {
       const matchData: JobMatchData = {
         ...scores,
         body,
+        suggestedSalary: salary,
         resumeId: resume.id!,
         resumeTitle: resume.title,
         matchedAt: new Date().toISOString(),

@@ -135,4 +135,17 @@ describe("matchStoredJob", () => {
     expect(storedMatchFailureMessage({ status: "unreadable", what: "job" })).toMatch(/job description/);
     expect(storedMatchFailureMessage({ status: "failed", message: "boom" })).toBe("boom");
   });
+
+  it("saves the suggested salary, and drops a stale one when the new match has none", async () => {
+    generateText.mockResolvedValue({ text: `${"SCORES: match=82 recommendation=good"}\nSALARY: low=135000 high=150000 currency=USD period=year basis=posted\n\nFit.`, totalUsage: {}, finishReason: "stop" });
+    await matchStoredJob(input);
+    const first = JSON.parse(db.job.update.mock.calls[0][0].data.matchData);
+    expect(first.suggestedSalary).toEqual({ low: 135000, high: 150000, currency: "USD", period: "year", basis: "posted" });
+    expect(first.body).toBe("Fit.");
+
+    setup({ matchData: db.job.update.mock.calls[0][0].data.matchData });
+    generateText.mockResolvedValue({ text: SCORED, totalUsage: {}, finishReason: "stop" });
+    await matchStoredJob(input);
+    expect(JSON.parse(db.job.update.mock.calls[1][0].data.matchData)).not.toHaveProperty("suggestedSalary");
+  });
 });
